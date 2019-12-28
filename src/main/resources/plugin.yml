@@ -1,0 +1,10 @@
+name: Youi
+main: xyz.rodeldev.YouiPlugin
+description: An UI customizer and designer
+author: rodel
+version: 1.0.0
+api-version: 1.13
+
+commands:
+  youi:
+    description: Main youi command
