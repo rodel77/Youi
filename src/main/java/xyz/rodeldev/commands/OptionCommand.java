@@ -1,9 +1,8 @@
 package xyz.rodeldev.commands;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Optional;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -13,6 +12,7 @@ import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.session.Session;
 import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Template;
+import xyz.rodeldev.templates.ValidationResult;
 
 public class OptionCommand extends ISubCommand {
     @Override
@@ -39,7 +39,13 @@ public class OptionCommand extends ISubCommand {
                 Helper.sendMessage(sender, "&cCan't find value of "+args[0]);
             }
         }else if(args.length==2){
+            ValidationResult result = 
             session.getYouiInventory().setOptionValue(args[0], args[1]);
+            if(result.getError().isPresent()){
+                Helper.sendMessage(sender, result.getError().get());
+            }else{
+                Helper.sendMessage(sender, "Option changed!");
+            }
             session.save();
         }
 

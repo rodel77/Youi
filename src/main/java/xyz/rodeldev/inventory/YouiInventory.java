@@ -2,21 +2,24 @@ package xyz.rodeldev.inventory;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
+import java.util.Optional;
 import java.util.Map.Entry;
 
-import com.google.common.base.Optional;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.internal.LazilyParsedNumber;
 
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 
+import xyz.rodeldev.Helper;
 import xyz.rodeldev.XMaterial;
 import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Template;
 import xyz.rodeldev.templates.TemplateRegistry;
+import xyz.rodeldev.templates.ValidationResult;
 
 public class YouiInventory {
     private Template template;
@@ -33,22 +36,25 @@ public class YouiInventory {
         return template;
     }
 
-    public boolean setOptionValue(String optionName, String valueString){
+    public ValidationResult setOptionValue(String optionName, String valueString){
         Option<?> option = template.getOption(optionName);
-        if(option==null) return false;
+        if(option==null) return ValidationResult.error("Invalid option");
 
         Object value = null;
         try {
-            Method method = option.getClass().getDeclaredMethod("valueOf", String.class);
+            Method method = option.getDefaultValue().getClass().getDeclaredMethod("valueOf", String.class);
             value = method.invoke(option.getClass(), valueString);
         } catch(Exception e){
-
         }
-        // if(option.isEnum()){
-        //     value = option.asEnum(valueString);
-        // }else{
-        //     value = valueString;
-        // }
+
+        if(value==null){
+            value = valueString;
+        }
+
+        ValidationResult result = option.checkValidation(value);
+        if(result.getError().isPresent()){
+            return result;
+        }
 
         options.put(optionName, value);
 
@@ -56,20 +62,24 @@ public class YouiInventory {
         createInventory();
         // inventory.setContents(oldContents);
 
-        return true;
+        return ValidationResult.ok();
     }
 
     public Optional<String> getOptionAsString(String optionName){
         if(options.containsKey(optionName)){
             return Optional.of(options.get(optionName).toString());
         }else{
-            return Optional.fromNullable(template.getOptionString(optionName));
+            return Optional.ofNullable(template.getOptionString(optionName));
         }
     }
 
     public <T> Optional<T> getOptionValue(String optionName, Class<T> type){
-        if(!options.containsKey(optionName)) return Optional.absent();
-        return Optional.of((T) options.get(optionName)).or(template.getDefaultValue(optionName, type));
+        if(!options.containsKey(optionName)) return Optional.empty();
+        if(options.containsKey(optionName)){
+            return Optional.of((T)options.get(optionName));
+        }
+
+        return Optional.of(template.getDefaultValue(optionName, type).get());
     }
 
     public YouiInventory setName(String name){
@@ -92,8 +102,8 @@ public class YouiInventory {
 
     public void createInventory(){
         Optional<String> title = getOptionValue("title", String.class);
-        InventoryType inventoryType = getOptionValue("inventoryType", InventoryType.class).or(InventoryType.CHEST);
-        int inventorySize = getOptionValue("inventorySize", Integer.class).or(9*6);
+        InventoryType inventoryType = getOptionValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
+        int inventorySize = getOptionValue("inventorySize", Integer.class).orElse(9*6);
         if(inventoryType==InventoryType.CHEST){
             if(title.isPresent()){
                 setInventory(Bukkit.createInventory(null, inventorySize, title.get()));
@@ -115,7 +125,14 @@ public class YouiInventory {
 
         JsonObject options = new JsonObject();
         for(Entry<String, Object> entry : this.options.entrySet()){
-            options.addProperty(entry.getKey(), entry.getValue().toString());
+            Object value = entry.getValue();
+            if(value instanceof Boolean){
+                options.addProperty(entry.getKey(), (Boolean)entry.getValue());
+            }else if(value instanceof Number){
+                options.addProperty(entry.getKey(), (Number)entry.getValue());
+            }else{
+                options.addProperty(entry.getKey(), entry.getValue().toString());
+            }
         }
         element.add("options", options);
 
@@ -141,7 +158,7 @@ public class YouiInventory {
 
                 Object value;
                 if(option.getDefaultValue() instanceof Number){
-                    value = optionObject.getAsNumber();
+                    value = Helper.str2num(optionObject.getAsString(), option.getDefaultValue().getClass());
                 }else if(option.getDefaultValue() instanceof Boolean){
                     value = optionObject.getAsBoolean();
                 }else{

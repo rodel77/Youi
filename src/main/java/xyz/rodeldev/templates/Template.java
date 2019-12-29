@@ -26,7 +26,15 @@ public class Template {
         this.name  = name;
         registerOption("title", "My custom UI");
         registerOption("inventoryType", InventoryType.CHEST);
-        registerOption("inventorySize", 9*6);
+        registerOption(new Option<Integer>("inventorySize", 9*6).validation(value->{
+            if(value%9!=0){
+                return ValidationResult.error("The value should be a multiple of 9");
+            }else if(value<0 || value>9*6){
+                return ValidationResult.error("The value should be in a range of 0-"+9*6);
+            }
+
+            return ValidationResult.ok();
+        }));
     }
 
     public ImmutableList<Placeholder> getPlaceholders(){
@@ -41,23 +49,27 @@ public class Template {
         return options.get(name);
     }
 
-    public Template setDefaultTitle(String title){
-        registerOption("title", title);
+    public <T> Option<T> getOption(String name, Class<T> type) {
+        return (Option<T>)options.get(name);
+    }
+
+    public Template setDefaultTitle(String title, boolean editable){
+        getOption("title", String.class).setDefaultValue(title).setEditable(editable);
         return this;
     }
 
     public Template setInventoryType(InventoryType inventoryType, boolean editable){
-        registerOption(new Option<InventoryType>(name, inventoryType).setEditable(editable));
+        getOption("inventoryType", InventoryType.class).setDefaultValue(inventoryType).setEditable(editable);
+        return this;
+    }
+
+    public Template setInventorySize(int inventorySize, boolean editable){
+        getOption("inventorySize", Integer.class).setDefaultValue(inventorySize).setEditable(editable);
         return this;
     }
 
     public InventoryType getInventoryType(){
         return getDefaultValue("inventoryType", InventoryType.class).or(InventoryType.CHEST);
-    }
-
-    public Template setInventorySize(int inventorySize, boolean editable){
-        registerOption(new Option<Integer>(name, inventorySize).setEditable(editable));
-        return this;
     }
 
     public int getInventorySize(){

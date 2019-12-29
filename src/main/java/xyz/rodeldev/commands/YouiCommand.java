@@ -68,19 +68,20 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
 
         if(args.length==1) {
             for(ISubCommand subCommand : commands){
-                // if(subCommand.onlyPlayer() == sender instanceof Player){
-                    results.add(subCommand.getName());
-                // }
+                if(subCommand.onlyPlayer() && !(sender instanceof Player)) continue;
+                results.add(subCommand.getName());
             }
         }else if(args.length>1){
             String subCommandName = args[0];
             for(ISubCommand subCommand : commands){
-                String[] subCommandArgs = new String[args.length-1];
-                System.arraycopy(args, 1, subCommandArgs, 0, subCommandArgs.length);
-                // if(subCommand.onlyPlayer() == sender instanceof Player && subCommand.match(subCommandName)){
-                if(subCommand.match(subCommandName)){
-                    subCommand.tabComplete(sender, subCommandArgs, results);
-                    break;
+                if(subCommand.match(subCommandName)) {
+                    if(subCommand.onlyPlayer() && !(sender instanceof Player)) continue;
+                    String[] subCommandArgs = new String[args.length-1];
+                    System.arraycopy(args, 1, subCommandArgs, 0, subCommandArgs.length);
+                    if(subCommand.match(subCommandName)){
+                        subCommand.tabComplete(sender, subCommandArgs, results);
+                        break;
+                    }
                 }
             }
         }

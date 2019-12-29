@@ -1,16 +1,44 @@
 package xyz.rodeldev.templates;
 
-import org.bukkit.Material;
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class Option<T> {
     private String name;
     private T defaultValue;
     private boolean editable = true;
+    private Function<T, ValidationResult> validate;
 
     public Option(String name, T defaultValue){
         this.name = name;
         this.defaultValue = defaultValue;
 
+    }
+
+    public Option<T> setDefaultValue(T defaultValue){
+        this.defaultValue = defaultValue;
+        return this;
+    }
+
+    public Option<T> validation(Function<T, ValidationResult> validate){
+        this.validate = validate;
+        return this;
+    }
+
+    public ValidationResult checkValidation(Object value){
+        if(isEnum() && !(value instanceof Enum<?>)){
+            return ValidationResult.error("Invalid enum result, use: "+Arrays.asList(getDefaultValue().getClass().getEnumConstants()).stream().map(o -> ((Enum<?>) o).name()).collect(Collectors.joining(", ")));
+        }
+
+        if(validate!=null){
+            return validate.apply((T)value);
+        }
+
+        return ValidationResult.ok();
     }
 
     public Option<T> setEditable(boolean editable){

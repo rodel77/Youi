@@ -66,6 +66,16 @@ public class YouiTest {
 
         Option<InventoryType> invType = new Option<>("inventoryType", InventoryType.ANVIL);
         Assert.assertEquals(invType.asEnum("BEACON"), InventoryType.BEACON);
+        Object a = InventoryType.ANVIL;
+        System.out.println(a instanceof Number);
+    }
+
+    @Test
+    public void str2num(){
+        Assert.assertTrue("str2num", Helper.str2num("1", Integer.class) instanceof Integer);
+        Assert.assertTrue("str2num", Helper.str2num("1", Long.class) instanceof Long);
+        Assert.assertTrue("str2num", Helper.str2num("1", Float.class) instanceof Float);
+        Assert.assertTrue("str2num", Helper.str2num("1", Double.class) instanceof Double);
     }
 
     // @Test
