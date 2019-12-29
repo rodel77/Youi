@@ -1,10 +1,7 @@
 package xyz.rodeldev.commands;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -21,6 +18,7 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
         commands.add(new CreateCommand());
         commands.add(new ResumeCommand());
         commands.add(new OptionCommand());
+        commands.add(new SetPlaceholderCommand());
     }
 
     @Override

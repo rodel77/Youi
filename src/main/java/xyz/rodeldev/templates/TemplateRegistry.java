@@ -10,7 +10,8 @@ public class TemplateRegistry {
     private static HashMap<String, Template> registry = new HashMap<>();
 
     public TemplateRegistry(){
-        register(new Template(YouiPlugin.getInstance(), "test"));
+        // @TODO: remove this
+        register(new Template(YouiPlugin.getInstance(), "test").registerPlaceholders("button1").registerPlaceholder(new Placeholder("constrainedph").setConstraint(1, 2)));
     }
 
     public static ImmutableList<Template> getRegistry(){

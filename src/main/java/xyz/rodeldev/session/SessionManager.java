@@ -4,12 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.bukkit.entity.Player;
+
 public class SessionManager {
     private Map<UUID, Session> sessions = new HashMap<>();
 
-    public Session pushSession(UUID uuid){
-        Session session = new Session();
-        sessions.put(uuid, session);
+    public Session pushSession(Player player){
+        Session session = new Session(player);
+        sessions.put(player.getUniqueId(), session);
         return session;
     }
 

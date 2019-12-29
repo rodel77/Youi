@@ -45,7 +45,7 @@ public class CreateCommand extends ISubCommand {
 
         Player player = (Player) sender;
 
-        Session session = YouiPlugin.getInstance().getSessionManager().pushSession(player.getUniqueId());
+        Session session = YouiPlugin.getInstance().getSessionManager().pushSession(player);
         session.setName(name.replace(" ", "_"));
         session.setTemplate(template);
         session.createInventory();

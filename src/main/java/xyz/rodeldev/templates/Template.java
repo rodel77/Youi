@@ -45,6 +45,10 @@ public class Template {
         return ImmutableList.copyOf(options.values());
     }
 
+    public Placeholder getPlaceholder(String name){
+        return placeholders.get(name);
+    }
+
     public Option<?> getOption(String name){
         return options.get(name);
     }
@@ -107,13 +111,13 @@ public class Template {
         return this;
     }
 
-    public Template addPlaceholders(Object... placeholders){
+    public Template registerPlaceholders(Object... placeholders){
         for(Object placeholder : placeholders){
             try{
                 if(placeholder instanceof String){
-                    addPlaceholders((String)placeholder);
+                    registerPlaceholders((String)placeholder);
                 }else if(placeholder instanceof Placeholder){
-                    addPlaceholders((Placeholder)placeholder);
+                    registerPlaceholders((Placeholder)placeholder);
                 }else{
                     throw new UnsupportedOperationException("Error adding placeholder on template \""+this.getFullName()+"\" only String and Placeholder type are available!");
                 }
@@ -124,21 +128,21 @@ public class Template {
         return this;
     }
 
-    public Template addPlaceholders(String... names){
+    public Template registerPlaceholders(String... names){
         for(String name : names){
-            this.addPlaceholder(new Placeholder(name));
+            this.registerPlaceholder(new Placeholder(name));
         }
         return this;
     }
 
-    public Template addPlaceholders(Placeholder... placeholders){
+    public Template registerPlaceholders(Placeholder... placeholders){
         for(Placeholder placeholder : placeholders){
-            this.addPlaceholder(placeholder);
+            this.registerPlaceholder(placeholder);
         }
         return this;
     }
 
-    public Template addPlaceholder(Placeholder placeholder){
+    public Template registerPlaceholder(Placeholder placeholder){
         try {
             if(placeholders.containsKey(placeholder.getName())){
                 throw new Exception("Trying to add a placeholder \""+placeholder.getName()+"\" in the template \""+this.getFullName()+"\"");

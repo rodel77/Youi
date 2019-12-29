@@ -12,6 +12,14 @@ public class Placeholder {
         return name;
     }
 
+    public int getMax(){
+        return max;
+    }
+
+    public int getMin(){
+        return min;
+    }
+
     public Placeholder setConstraint(int min, int max){
         this.min = min;
         this.max = max;

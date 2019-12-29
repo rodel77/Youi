@@ -10,7 +10,6 @@ import org.bukkit.entity.Player;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
-import xyz.rodeldev.inventory.YouiInventory;
 import xyz.rodeldev.session.Session;
 
 public class ResumeCommand extends ISubCommand {
@@ -21,7 +20,7 @@ public class ResumeCommand extends ISubCommand {
         if(args.length>0){
             File file = YouiPlugin.getInstance().getFileSystem().getMenu(args[0]);
             if(file.exists()){
-                Session session = YouiPlugin.getInstance().getSessionManager().pushSession(player.getUniqueId());
+                Session session = YouiPlugin.getInstance().getSessionManager().pushSession(player);
                 session.load(file);
                 session.resume(player);
             }else{

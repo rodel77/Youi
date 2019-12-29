@@ -1,12 +1,16 @@
 package xyz.rodeldev.inventory;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Optional;
 import java.util.Map.Entry;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LazilyParsedNumber;
 
 import org.bukkit.Bukkit;
@@ -25,6 +29,7 @@ public class YouiInventory {
     private Template template;
     private String name;
     private HashMap<String, Object> options = new HashMap<>();
+    private HashMap<String, List<Integer>> placeholders = new HashMap<>();
     private Inventory inventory;
 
     public YouiInventory setTemplate(Template template){
@@ -34,6 +39,27 @@ public class YouiInventory {
 
     public Template getTemplate(){
         return template;
+    }
+
+    public void setPlaceholder(String placeholder, int slot){
+        List<Integer> slotList = placeholders.get(placeholder);
+        if(slotList==null){
+            slotList = new ArrayList<>();
+            placeholders.put(placeholder, slotList);
+        }
+
+        slotList.add(slot);
+    }
+
+    public List<Integer> getPlaceholder(String placeholder){
+        return placeholders.get(placeholder);
+    }
+
+    public int countPlaceholders(String placeholder){
+        if(placeholders.containsKey(placeholder)){
+            return placeholders.get(placeholder).size();
+        }
+        return 0;
     }
 
     public ValidationResult setOptionValue(String optionName, String valueString){
@@ -136,6 +162,16 @@ public class YouiInventory {
         }
         element.add("options", options);
 
+        JsonObject placeholders = new JsonObject();
+        for(Entry<String, List<Integer>> placeholderInfo : this.placeholders.entrySet()){
+            JsonArray slotArray = new JsonArray();
+            for(int slotIndex : placeholderInfo.getValue()){
+                slotArray.add(new JsonPrimitive(slotIndex));
+            }
+            placeholders.add(placeholderInfo.getKey(), slotArray);
+        }
+        element.add("placeholders", placeholders);
+
         YamlConfiguration conf = new YamlConfiguration();
         for(int i = 0; i < inventory.getContents().length; i++){
             if(inventory.getContents()[i]!=null){
@@ -170,6 +206,15 @@ public class YouiInventory {
 
                 this.options.put(option.getName(), value);
             }
+        }
+
+        JsonObject placeholders = element.get("placeholders").getAsJsonObject();
+        for(Entry<String, JsonElement> placeholderInfo : placeholders.entrySet()){
+            List<Integer> slotList = new ArrayList<>();
+            for(JsonElement slot : placeholderInfo.getValue().getAsJsonArray()){
+                slotList.add(slot.getAsInt());
+            }
+            this.placeholders.put(placeholderInfo.getKey(), slotList);
         }
 
         createInventory();

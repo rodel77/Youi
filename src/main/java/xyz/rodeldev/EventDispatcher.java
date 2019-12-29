@@ -1,17 +1,47 @@
 package xyz.rodeldev;
 
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.session.Session;
 
 public class EventDispatcher implements Listener {
     @EventHandler
+    public void onPlayerLeave(PlayerQuitEvent e){
+        YouiPlugin.getInstance().getSessionManager().destroySession(e.getPlayer().getUniqueId());
+    }
+
+    @EventHandler
     public void onInventoryClose(InventoryCloseEvent e){
         Session session = YouiPlugin.getInstance().getSessionManager().getSession(e.getPlayer().getUniqueId());
         if(session!=null && session.getInventory()==e.getInventory()){
             session.save();
+        }
+    }
+
+    @EventHandler
+    public void onInventoryClick(InventoryClickEvent e){
+        if(e.getWhoClicked() instanceof Player && e.getClick()==ClickType.SHIFT_RIGHT){
+            Player player = (Player) e.getWhoClicked();
+            Session session = YouiPlugin.getInstance().getSessionManager().getSession(player.getUniqueId());
+            if(session!=null && session.getInventory()==e.getInventory()){
+                ItemStack item = e.getCurrentItem();
+                if(item==null){
+                    Helper.sendMessage(player, "&cThere is not item to select!");
+                }else{
+                    e.setCancelled(true);
+                    player.closeInventory();
+                    session.focusSlot(e.getSlot());
+                    Helper.sendMessage(player, "You focused slot %d to mark it as a placeholder, this is the list of placeholders (use /youi setplaceholder <name>):", e.getSlot());
+                    session.displayPlaceholderList();
+                }
+            }
         }
     }
 }

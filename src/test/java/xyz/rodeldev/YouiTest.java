@@ -2,8 +2,6 @@ package xyz.rodeldev;
 
 import static org.mockito.Mockito.*;
 
-import java.util.UUID;
-
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
 import org.junit.Before;
@@ -12,8 +10,6 @@ import org.junit.runner.RunWith;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import junit.framework.Assert;
-import xyz.rodeldev.session.Session;
-import xyz.rodeldev.session.SessionManager;
 import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
@@ -53,7 +49,7 @@ public class YouiTest {
     @Test
     public void testPlaceholders(){
         Template template = new Template(testPlugin, "template1");
-        template.addPlaceholder(new Placeholder("placeholderTest"));
+        template.registerPlaceholder(new Placeholder("placeholderTest"));
     }
 
     @Test
