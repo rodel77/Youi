@@ -24,9 +24,7 @@ public class ResumeCommand extends ISubCommand {
                 session.load(file);
                 session.resume(player);
             }else{
-                Helper.sendMessage(sender, "&cNo menu found, list of menus: "+Arrays.asList(YouiPlugin.getInstance().getFileSystem().getMenusFolder().listFiles()).stream().map(streamFile -> {
-                    return streamFile.getName().replace(".json", "");
-                }).collect(Collectors.joining(", ")));
+                Helper.sendMessage(sender, "&cNo menu found, list of menus: "+YouiPlugin.getInstance().getFileSystem().listMenuNames().stream().collect(Collectors.joining(", ")));
             }
             return true;
         }
@@ -47,9 +45,7 @@ public class ResumeCommand extends ISubCommand {
     @Override
     public void tabComplete(CommandSender sender, String[] args, List<String> result) {
         if(args.length==1){
-            result.addAll(Arrays.asList(YouiPlugin.getInstance().getFileSystem().getMenusFolder().listFiles()).stream().map(streamFile -> {
-                return streamFile.getName().replace(".json", "");
-            }).collect(Collectors.toList()));
+            result.addAll(YouiPlugin.getInstance().getFileSystem().listMenuNames());
         }
     }
 

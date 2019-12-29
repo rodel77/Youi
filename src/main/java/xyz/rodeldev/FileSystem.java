@@ -2,6 +2,9 @@ package xyz.rodeldev;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class FileSystem {
     private File dataFolder, overrideFile, menusFolder;
@@ -37,6 +40,10 @@ public class FileSystem {
 
     public File getMenusFolder(){
         return menusFolder;
+    }
+
+    public List<String> listMenuNames(){
+        return Arrays.asList(getMenusFolder().list()).stream().filter(name -> name.endsWith(".json")).map(name -> name.replace(".json", "")).collect(Collectors.toList());
     }
 
     public File getMenu(String name){

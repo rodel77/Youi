@@ -1,5 +1,6 @@
 package xyz.rodeldev.commands;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -38,9 +39,12 @@ public class OptionCommand extends ISubCommand {
             }else{
                 Helper.sendMessage(sender, "&cCan't find value of "+args[0]);
             }
-        }else if(args.length==2){
+        }else if(args.length>=2){
+            String lastArgs[] = new String[args.length-1];
+            System.arraycopy(args, 1, lastArgs, 0, lastArgs.length);
+
             ValidationResult result = 
-            session.getYouiInventory().setOptionValue(args[0], args[1]);
+            session.getYouiInventory().setOptionValue(args[0], Arrays.asList(lastArgs).stream().collect(Collectors.joining(" ")));
             if(result.getError().isPresent()){
                 Helper.sendMessage(sender, result.getError().get());
             }else{

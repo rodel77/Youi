@@ -19,11 +19,11 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
         commands.add(new ResumeCommand());
         commands.add(new OptionCommand());
         commands.add(new SetPlaceholderCommand());
+        commands.add(new ListCommand());
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
-        System.out.println(args.length);
         if(args.length<1) {
             displayHelp(sender);
             return true;

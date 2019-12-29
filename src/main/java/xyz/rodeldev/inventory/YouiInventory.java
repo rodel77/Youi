@@ -14,6 +14,7 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.internal.LazilyParsedNumber;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -132,13 +133,13 @@ public class YouiInventory {
         int inventorySize = getOptionValue("inventorySize", Integer.class).orElse(9*6);
         if(inventoryType==InventoryType.CHEST){
             if(title.isPresent()){
-                setInventory(Bukkit.createInventory(null, inventorySize, title.get()));
+                setInventory(Bukkit.createInventory(null, inventorySize, ChatColor.translateAlternateColorCodes('&', title.get())));
             }else{
                 setInventory(Bukkit.createInventory(null, inventorySize));
             }
         }else{
             if(title.isPresent()){
-                setInventory(Bukkit.createInventory(null, inventoryType, title.get()));
+                setInventory(Bukkit.createInventory(null, inventoryType, ChatColor.translateAlternateColorCodes('&',title.get())));
             }else{
                 setInventory(Bukkit.createInventory(null, inventoryType));
             }
