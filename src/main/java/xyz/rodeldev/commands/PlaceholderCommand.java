@@ -1,7 +1,6 @@
 package xyz.rodeldev.commands;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -12,7 +11,7 @@ import xyz.rodeldev.session.Session;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
 
-public class SetPlaceholderCommand extends ISubCommand {
+public class PlaceholderCommand extends ISubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
@@ -22,13 +21,14 @@ public class SetPlaceholderCommand extends ISubCommand {
             return true;
         }
 
-        if(session.getSlotFocus()==-1){
-            Helper.sendMessage(sender, "&cYou don't have any slot selected, please shift + right click on a slot to select focus it, then execute this command");
+        if(args.length<1){
+            session.openPlaceholdersMenu(player);
             return true;
         }
 
-        if(args.length<1){
-            return false;
+        if(session.getSlotFocus()==-1){
+            Helper.sendMessage(sender, "&cYou don't have any slot selected, please shift + right click on a slot to select focus it, then execute this command");
+            return true;
         }
 
         Placeholder placeholder = session.getTemplate().getPlaceholder(args[0]);
@@ -76,7 +76,7 @@ public class SetPlaceholderCommand extends ISubCommand {
 
     @Override
     public String getHelp() {
-        return super.getHelp()+" <name> &7(Set placeholder of the selected (shift + right click) slot in the editing menu)";
+        return super.getHelp()+" [name] &7(Set placeholder of the selected (shift + right click) slot in the editing menu or visualize the placeholders)";
     }
 
     @Override
@@ -86,6 +86,6 @@ public class SetPlaceholderCommand extends ISubCommand {
 
     @Override
     public String getName() {
-        return "setplaceholder";
+        return "placeholder";
     }
 }

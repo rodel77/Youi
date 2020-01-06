@@ -1,22 +1,20 @@
 package xyz.rodeldev.templates;
 
 import java.util.HashMap;
+import java.util.Optional;
+import java.util.Map.Entry;
 
-import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
 
+import xyz.rodeldev.YouiPlugin;
+import xyz.rodeldev.inventory.CustomMenu;
+
 public class Template {
     private Plugin owner;
     private String name;
-
-    // private InventoryType inventoryType = InventoryType.CHEST;
-    // private boolean inventoryTypeEditable = false;
-
-    // private int inventorySize = 9*6;
-    // private boolean inventorySizeEditable = true;
 
     private HashMap<String, Placeholder> placeholders = new HashMap<>();
     private HashMap<String, Option<?>> options = new HashMap<>();
@@ -35,6 +33,10 @@ public class Template {
 
             return ValidationResult.ok();
         }));
+    }
+
+    public Optional<CustomMenu> getOverride(){
+        return Optional.ofNullable(TemplateRegistry.getOverrideMap().get(this));
     }
 
     public ImmutableList<Placeholder> getPlaceholders(){
@@ -73,15 +75,15 @@ public class Template {
     }
 
     public InventoryType getInventoryType(){
-        return getDefaultValue("inventoryType", InventoryType.class).or(InventoryType.CHEST);
+        return getDefaultValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
     }
 
     public int getInventorySize(){
-        return getDefaultValue("inventorySize", Integer.class).or(9*6);
+        return getDefaultValue("inventorySize", Integer.class).orElse(9*6);
     }
 
     public <T> Optional<T> getDefaultValue(String optionName, Class<T> type){
-        if(!options.containsKey(optionName)) return Optional.absent();
+        if(!options.containsKey(optionName)) return Optional.empty();
         return Optional.of((T) options.get(optionName).getDefaultValue());
     }
 
@@ -102,6 +104,12 @@ public class Template {
         try{
             if(!Option.validType(option.getDefaultValue())){
                 throw new UnsupportedOperationException("Can't register option \""+option.getName()+"\" in template \""+this.getFullName()+"\"");
+            }
+
+            for(Entry<String, Option<?>> op : options.entrySet()){
+                if(op.getKey().equalsIgnoreCase(option.getName())){
+                    throw new Exception("Can't register option \""+option.getName()+"\" in template \""+this.getFullName()+"\" because there is already one called like that (not case sensitive)");
+                }
             }
 
             options.put(option.getName(), option);
@@ -144,8 +152,10 @@ public class Template {
 
     public Template registerPlaceholder(Placeholder placeholder){
         try {
-            if(placeholders.containsKey(placeholder.getName())){
-                throw new Exception("Trying to add a placeholder \""+placeholder.getName()+"\" in the template \""+this.getFullName()+"\"");
+            for(Entry<String, Placeholder> ph : placeholders.entrySet()){
+                if(ph.getKey().equalsIgnoreCase(placeholder.getName())){
+                    throw new Exception("Can't register placeholder \""+placeholder.getName()+"\" in template \""+this.getFullName()+"\" because there is already one called like that (not case sensitive)");
+                }
             }
 
             placeholders.put(placeholder.getName(), placeholder);

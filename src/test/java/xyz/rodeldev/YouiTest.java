@@ -1,6 +1,11 @@
 package xyz.rodeldev;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
@@ -72,6 +77,17 @@ public class YouiTest {
         Assert.assertTrue("str2num", Helper.str2num("1", Long.class) instanceof Long);
         Assert.assertTrue("str2num", Helper.str2num("1", Float.class) instanceof Float);
         Assert.assertTrue("str2num", Helper.str2num("1", Double.class) instanceof Double);
+    }
+
+    @Test
+    public void meta(){
+        List<String> a = new ArrayList<>();
+        a.add("aa");
+        a.add("bb");
+        System.out.println(a.stream().filter(b -> b.startsWith("a")).collect(Collectors.joining("|")));
+        // stack.getItemMeta().getLore();
+        // System.out.println(stack.hasItemMeta());
+        // System.out.println(stack.getItemMeta().getLore());
     }
 
     // @Test

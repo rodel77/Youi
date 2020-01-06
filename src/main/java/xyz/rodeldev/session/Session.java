@@ -2,14 +2,19 @@ package xyz.rodeldev.session;
 
 import java.io.File;
 import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
@@ -21,10 +26,16 @@ public class Session {
     private Player owner;
     private YouiInventory youiInventory;
     private int slotFocus = -1;
+
+    private Inventory placeholderInventory;
     
     public Session(Player owner){
         this.owner = owner;
         youiInventory = new YouiInventory();
+    }
+
+    public Player getOwner(){
+        return owner;
     }
 
     public boolean slotHasPlaceholder(String placeholderName){
@@ -92,6 +103,40 @@ public class Session {
     public Inventory getInventory(){
         return youiInventory.getInventory();
     }
+    public void refreshPlaceholders(){
+        if(placeholderInventory==null){
+            placeholderInventory = youiInventory.newInventory();
+        }
+
+        placeholderInventory.clear();
+
+        for(Entry<String, List<Integer>> placeholders : youiInventory.getPlaceholders().entrySet()){
+            for(int slot : placeholders.getValue()){
+                ItemStack item = placeholderInventory.getItem(slot);
+                if(item==null || item.getType()==Material.AIR){
+                    item = new ItemStack(Material.EMERALD);
+                }else{
+                    item.setAmount(Math.min(item.getMaxStackSize(), item.getAmount()+1));
+                }
+                
+                ItemMeta meta = item.getItemMeta();
+                List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+                lore.add(placeholders.getKey());
+                meta.setLore(lore);
+                item.setItemMeta(meta);
+                placeholderInventory.setItem(slot, item);
+            }
+        }
+    }
+
+    public Inventory getPlaceholderInventory(){
+        return placeholderInventory;
+    }
+
+    public void openPlaceholdersMenu(Player player){
+        refreshPlaceholders();
+        player.openInventory(placeholderInventory);
+    }
 
     public void createInventory(){
         youiInventory.createInventory();
@@ -102,10 +147,10 @@ public class Session {
     }
 
     public void load(File file){
-        try {
+        try(FileReader reader = new FileReader(file)){
             setName(file.getName().replace(".json", ""));
             JsonParser parser = new JsonParser();
-            JsonElement element = parser.parse(new FileReader(file));
+            JsonElement element = parser.parse(reader);
             JsonObject jsonObject = element.getAsJsonObject();
             youiInventory.deserialize(jsonObject);
         } catch(Exception e){

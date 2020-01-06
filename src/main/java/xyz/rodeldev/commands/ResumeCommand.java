@@ -19,6 +19,13 @@ public class ResumeCommand extends ISubCommand {
 
         if(args.length>0){
             File file = YouiPlugin.getInstance().getFileSystem().getMenu(args[0]);
+
+            Session locker = YouiPlugin.getInstance().getSessionManager().getMenuSession(args[0]);
+            if(locker!=null && locker.getOwner()!=player){
+                Helper.sendMessage(sender, "&cThis menu is beign edited by "+locker.getOwner().getName());
+                return true;
+            }
+
             if(file.exists()){
                 Session session = YouiPlugin.getInstance().getSessionManager().pushSession(player);
                 session.load(file);

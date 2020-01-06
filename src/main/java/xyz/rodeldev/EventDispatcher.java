@@ -27,19 +27,25 @@ public class EventDispatcher implements Listener {
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent e){
-        if(e.getWhoClicked() instanceof Player && e.getClick()==ClickType.SHIFT_RIGHT){
+        if(e.getWhoClicked() instanceof Player){
             Player player = (Player) e.getWhoClicked();
             Session session = YouiPlugin.getInstance().getSessionManager().getSession(player.getUniqueId());
-            if(session!=null && session.getInventory()==e.getInventory()){
-                ItemStack item = e.getCurrentItem();
-                if(item==null){
-                    Helper.sendMessage(player, "&cThere is not item to select!");
-                }else{
+            if(session!=null){
+                if(session.getInventory()==e.getInventory() && e.getClick()==ClickType.SHIFT_RIGHT){
+                    ItemStack item = e.getCurrentItem();
+                    if(item==null){
+                        Helper.sendMessage(player, "&cThere is not item to select!");
+                    }else{
+                        e.setCancelled(true);
+                        player.closeInventory();
+                        session.focusSlot(e.getSlot());
+                        Helper.sendMessage(player, "You focused slot %d to mark it as a placeholder, this is the list of placeholders (use /youi placeholder <name>):", e.getSlot());
+                        session.displayPlaceholderList();
+                        Helper.sendMessage(player, "&6You can also clear all the placeholders from this slot using /youi clearplaceholders", e.getSlot());
+                    }
+                }else if(session.getPlaceholderInventory()!=null && session.getPlaceholderInventory()==e.getInventory()){
+                    Helper.sendMessage(player, "&cThis is just a visualization inventory.");
                     e.setCancelled(true);
-                    player.closeInventory();
-                    session.focusSlot(e.getSlot());
-                    Helper.sendMessage(player, "You focused slot %d to mark it as a placeholder, this is the list of placeholders (use /youi setplaceholder <name>):", e.getSlot());
-                    session.displayPlaceholderList();
                 }
             }
         }

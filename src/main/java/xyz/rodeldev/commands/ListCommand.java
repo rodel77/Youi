@@ -43,11 +43,11 @@ public class ListCommand extends ISubCommand {
             }else if(args[0].equalsIgnoreCase("menus")){
                 Helper.sendMessage(sender, "List of menus:");
                 for(String fileName : YouiPlugin.getInstance().getFileSystem().getMenusFolder().list()){
-                    try {
-                        File file = new File(YouiPlugin.getInstance().getFileSystem().getMenusFolder(), fileName);
+                    File file = new File(YouiPlugin.getInstance().getFileSystem().getMenusFolder(), fileName);
+                    try(FileReader reader = new FileReader(file)){
                         String menuName = fileName.replace(".json", "");
                         JsonParser parser = new JsonParser();
-                        JsonObject json = parser.parse(new FileReader(file)).getAsJsonObject();
+                        JsonObject json = parser.parse(reader).getAsJsonObject();
                         Template template = TemplateRegistry.get(json.get("template").getAsString());
                         if(template==null){
                             Helper.sendMessage(sender, "Menu %s &cINVALID TEMPLATE", menuName);

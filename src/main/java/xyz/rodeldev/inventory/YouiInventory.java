@@ -2,36 +2,100 @@ package xyz.rodeldev.inventory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.internal.LazilyParsedNumber;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.XMaterial;
 import xyz.rodeldev.templates.Option;
+import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
 import xyz.rodeldev.templates.TemplateRegistry;
 import xyz.rodeldev.templates.ValidationResult;
 
-public class YouiInventory {
+public class YouiInventory implements CustomMenu {
     private Template template;
     private String name;
     private HashMap<String, Object> options = new HashMap<>();
     private HashMap<String, List<Integer>> placeholders = new HashMap<>();
     private Inventory inventory;
+
+    @Override
+    public Inventory getBukkitInventory() {
+        Inventory inventory = newInventory();
+        setItems(inventory);
+        return inventory;
+    }
+
+    @Override
+    public ItemStack[] getContents() {
+        ItemStack[] contents = new ItemStack[this.inventory.getContents().length];
+        System.arraycopy(this.inventory.getContents(), 0, contents, 0, contents.length);
+        return contents;
+    }
+
+    @Override
+    public Inventory getNewBukkitInventory() {
+        return newInventory();
+    }
+
+    @Override
+    public void setItems(Inventory inventory) {
+        inventory.setContents(getContents());
+    }
+
+    @Override
+    public <T> Optional<T> getOptionValue(String optionName, Class<T> type){
+        if(!options.containsKey(optionName)) return Optional.empty();
+        if(options.containsKey(optionName)){
+            return Optional.of((T)options.get(optionName));
+        }
+
+        return Optional.of(template.getDefaultValue(optionName, type).get());
+    }
+
+    @Override
+    public List<String> getPlaceholdersIn(int slot) {
+        List<String> placeholders = new ArrayList<>();
+        for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
+            for(int slt : placeholderList.getValue()){
+                if(slt==slot){
+                    placeholders.add(placeholderList.getKey());
+                }
+            }
+        }
+        return placeholders;
+    }
+
+    @Override
+    public boolean hasPlaceholder(int slot, String placeholder) {
+        for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
+            if(placeholderList.getKey().equalsIgnoreCase(placeholder)){
+                for(int slt : placeholderList.getValue()){
+                    if(slt==slot){
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
     public YouiInventory setTemplate(Template template){
         this.template = template;
@@ -40,6 +104,23 @@ public class YouiInventory {
 
     public Template getTemplate(){
         return template;
+    }
+
+    public void fixPlaceholders(){
+        Iterator<Entry<String, List<Integer>>> iterator = placeholders.entrySet().iterator();
+
+        while(iterator.hasNext()){
+            Entry<String, List<Integer>> placeholder = iterator.next();
+            for(int i = placeholder.getValue().size()-1; i >= 0; i--){
+                int slot = placeholder.getValue().get(i);
+                if(slot<0 || slot>=inventory.getSize()){
+                    placeholder.getValue().remove(i);
+                }
+            }
+            if(placeholder.getValue().isEmpty()){
+                iterator.remove();
+            }
+        }
     }
 
     public void setPlaceholder(String placeholder, int slot){
@@ -54,6 +135,10 @@ public class YouiInventory {
 
     public List<Integer> getPlaceholder(String placeholder){
         return placeholders.get(placeholder);
+    }
+
+    public HashMap<String, List<Integer>> getPlaceholders(){
+        return placeholders;
     }
 
     public int countPlaceholders(String placeholder){
@@ -87,6 +172,7 @@ public class YouiInventory {
 
         // ItemStack oldContents[] = inventory.getContents();
         createInventory();
+        fixPlaceholders();
         // inventory.setContents(oldContents);
 
         return ValidationResult.ok();
@@ -100,20 +186,12 @@ public class YouiInventory {
         }
     }
 
-    public <T> Optional<T> getOptionValue(String optionName, Class<T> type){
-        if(!options.containsKey(optionName)) return Optional.empty();
-        if(options.containsKey(optionName)){
-            return Optional.of((T)options.get(optionName));
-        }
-
-        return Optional.of(template.getDefaultValue(optionName, type).get());
-    }
-
     public YouiInventory setName(String name){
         this.name = name;
         return this;
     }
 
+    @Override
     public String getName(){
         return name;
     }
@@ -127,23 +205,50 @@ public class YouiInventory {
         return this;
     }
 
-    public void createInventory(){
+    public Inventory newInventory(){
         Optional<String> title = getOptionValue("title", String.class);
         InventoryType inventoryType = getOptionValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
         int inventorySize = getOptionValue("inventorySize", Integer.class).orElse(9*6);
         if(inventoryType==InventoryType.CHEST){
             if(title.isPresent()){
-                setInventory(Bukkit.createInventory(null, inventorySize, ChatColor.translateAlternateColorCodes('&', title.get())));
+                return Bukkit.createInventory(null, inventorySize, ChatColor.translateAlternateColorCodes('&', title.get()));
             }else{
-                setInventory(Bukkit.createInventory(null, inventorySize));
+                return Bukkit.createInventory(null, inventorySize);
             }
         }else{
             if(title.isPresent()){
-                setInventory(Bukkit.createInventory(null, inventoryType, ChatColor.translateAlternateColorCodes('&',title.get())));
+                return Bukkit.createInventory(null, inventoryType, ChatColor.translateAlternateColorCodes('&',title.get()));
             }else{
-                setInventory(Bukkit.createInventory(null, inventoryType));
+                return Bukkit.createInventory(null, inventoryType);
             }
         }
+    }
+
+    public void createInventory(){
+        setInventory(newInventory());
+    }
+
+    public List<Placeholder> getPlaceholders(int slot){
+        List<Placeholder> placeholdersList = new ArrayList<>();
+        for(Entry<String, List<Integer>> placeholder : placeholders.entrySet()){
+            for(int i : placeholder.getValue()){
+                if(i==slot){
+                    placeholdersList.add(template.getPlaceholder(placeholder.getKey()));
+                }
+            }
+        }
+        return placeholdersList;
+    }
+
+    public void removePlaceholders(int slot){
+        for(Entry<String, List<Integer>> placeholder : placeholders.entrySet()){
+            for(int i = placeholder.getValue().size()-1; i >= 0; i--){
+                if(slot==placeholder.getValue().get(i)){
+                    placeholder.getValue().remove(i);
+                }
+            }
+        }
+        fixPlaceholders();
     }
 
     public JsonElement serialize(){

@@ -2,9 +2,14 @@ package xyz.rodeldev;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import com.google.common.io.Files;
 
 public class FileSystem {
     private File dataFolder, overrideFile, menusFolder;
@@ -19,6 +24,7 @@ public class FileSystem {
             overrideFile = new File(this.dataFolder, "override.json");
             if(!overrideFile.exists()){
                 overrideFile.createNewFile();
+                Files.write("{}", overrideFile, Charset.forName("UTF-8"));
             }
 
             menusFolder = new File(this.dataFolder, "menus");
