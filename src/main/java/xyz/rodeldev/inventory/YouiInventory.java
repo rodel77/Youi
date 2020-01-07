@@ -2,7 +2,6 @@ package xyz.rodeldev.inventory;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -14,8 +13,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
@@ -29,6 +26,9 @@ import xyz.rodeldev.templates.Template;
 import xyz.rodeldev.templates.TemplateRegistry;
 import xyz.rodeldev.templates.ValidationResult;
 
+/**
+ * Represents the menu customized by the users.
+ */
 public class YouiInventory implements CustomMenu {
     private Template template;
     private String name;
@@ -37,16 +37,11 @@ public class YouiInventory implements CustomMenu {
     private Inventory inventory;
 
     @Override
-    public Inventory getBukkitInventory() {
-        Inventory inventory = newInventory();
-        setItems(inventory);
-        return inventory;
-    }
-
-    @Override
     public ItemStack[] getContents() {
         ItemStack[] contents = new ItemStack[this.inventory.getContents().length];
-        System.arraycopy(this.inventory.getContents(), 0, contents, 0, contents.length);
+        for(int i = 0; i < contents.length; i++){
+            contents[i] = this.inventory.getContents()[i].clone();
+        }
         return contents;
     }
 
@@ -56,18 +51,13 @@ public class YouiInventory implements CustomMenu {
     }
 
     @Override
-    public void setItems(Inventory inventory) {
-        inventory.setContents(getContents());
-    }
-
-    @Override
     public <T> Optional<T> getOptionValue(String optionName, Class<T> type){
         if(!options.containsKey(optionName)) return Optional.empty();
         if(options.containsKey(optionName)){
             return Optional.of((T)options.get(optionName));
         }
 
-        return Optional.of(template.getDefaultValue(optionName, type).get());
+        return Optional.of(template.getOptionDefaultValue(optionName, type).get());
     }
 
     @Override
@@ -209,19 +199,7 @@ public class YouiInventory implements CustomMenu {
         Optional<String> title = getOptionValue("title", String.class);
         InventoryType inventoryType = getOptionValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
         int inventorySize = getOptionValue("inventorySize", Integer.class).orElse(9*6);
-        if(inventoryType==InventoryType.CHEST){
-            if(title.isPresent()){
-                return Bukkit.createInventory(null, inventorySize, ChatColor.translateAlternateColorCodes('&', title.get()));
-            }else{
-                return Bukkit.createInventory(null, inventorySize);
-            }
-        }else{
-            if(title.isPresent()){
-                return Bukkit.createInventory(null, inventoryType, ChatColor.translateAlternateColorCodes('&',title.get()));
-            }else{
-                return Bukkit.createInventory(null, inventoryType);
-            }
-        }
+        return Helper.createInventory(inventoryType, inventorySize, title.isPresent() ? title.get() : null);
     }
 
     public void createInventory(){

@@ -3,10 +3,6 @@ package xyz.rodeldev;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.plugin.Plugin;
 import org.junit.Before;
@@ -19,9 +15,6 @@ import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
 
-/**
- * Unit test for simple App.
- */
 @RunWith(PowerMockRunner.class)
 public class YouiTest {
 
@@ -36,9 +29,6 @@ public class YouiTest {
         when(testPluginWSpaces.getName()).thenReturn("My Plugin");
     }
 
-    /**
-     * Rigorous Test :-)
-     */
     @Test
     public void testTemplate(){
         Template template = new Template(testPlugin, "template1");
@@ -78,26 +68,4 @@ public class YouiTest {
         Assert.assertTrue("str2num", Helper.str2num("1", Float.class) instanceof Float);
         Assert.assertTrue("str2num", Helper.str2num("1", Double.class) instanceof Double);
     }
-
-    @Test
-    public void meta(){
-        List<String> a = new ArrayList<>();
-        a.add("aa");
-        a.add("bb");
-        System.out.println(a.stream().filter(b -> b.startsWith("a")).collect(Collectors.joining("|")));
-        // stack.getItemMeta().getLore();
-        // System.out.println(stack.hasItemMeta());
-        // System.out.println(stack.getItemMeta().getLore());
-    }
-
-    // @Test
-    // public void sessionSerialization(){
-    //     Template template = new Template(testPlugin, "template1");
-    //     UUID uuid = UUID.randomUUID();
-    //     SessionManager sessionManager = new SessionManager();
-    //     Session session = sessionManager.pushSession(uuid);
-    //     session.setName("test");
-    //     session.setTemplate(template);
-    //     session.createInventory();
-    // }
 }

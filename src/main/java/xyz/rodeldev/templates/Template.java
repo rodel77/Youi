@@ -7,14 +7,17 @@ import java.util.Map.Entry;
 import com.google.common.collect.ImmutableList;
 
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
-import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.inventory.CustomMenu;
+import xyz.rodeldev.inventory.DefaultInventory;
 
 public class Template {
     private Plugin owner;
     private String name;
+
+    private DefaultInventory defaultInventory;
 
     private HashMap<String, Placeholder> placeholders = new HashMap<>();
     private HashMap<String, Option<?>> options = new HashMap<>();
@@ -35,8 +38,38 @@ public class Template {
         }));
     }
 
-    public Optional<CustomMenu> getOverride(){
-        return Optional.ofNullable(TemplateRegistry.getOverrideMap().get(this));
+    public Template defaultAddPlaceholder(String name, int slot){
+        if(defaultInventory==null) defaultInventory = new DefaultInventory(this);
+        defaultInventory.addDefaultPlaceholder(name, slot);
+        return this;
+    }
+
+    public Template defaultSetItem(ItemStack item, int slot){
+        if(defaultInventory==null) defaultInventory = new DefaultInventory(this);
+        defaultInventory.getInventory().setItem(slot, item);
+        return this;
+    }
+
+    public Template defaultFillInventory(ItemStack item){
+        if(defaultInventory==null) defaultInventory = new DefaultInventory(this);
+        ItemStack[] contents = defaultInventory.getInventory().getContents();
+        for(int i = 0; i < contents.length; i++){
+            contents[i] = item;
+        }
+        return this;
+    }
+
+    /**
+     * Search if there is any player-made UI for this template, otherwise return the default menu (created with the "default..." methods like {@link Template#defaultAddPlaceholder(String, int)}) or null.
+     * 
+     * @return the player made menu or the default menu or null
+     */
+    public CustomMenu getOverride(){
+        CustomMenu customMenu = TemplateRegistry.getOverrideMap().get(this);
+        if(customMenu!=null){
+            return customMenu;
+        }
+        return defaultInventory;
     }
 
     public ImmutableList<Placeholder> getPlaceholders(){
@@ -75,14 +108,14 @@ public class Template {
     }
 
     public InventoryType getInventoryType(){
-        return getDefaultValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
+        return getOptionDefaultValue("inventoryType", InventoryType.class).orElse(InventoryType.CHEST);
     }
 
     public int getInventorySize(){
-        return getDefaultValue("inventorySize", Integer.class).orElse(9*6);
+        return getOptionDefaultValue("inventorySize", Integer.class).orElse(9*6);
     }
 
-    public <T> Optional<T> getDefaultValue(String optionName, Class<T> type){
+    public <T> Optional<T> getOptionDefaultValue(String optionName, Class<T> type){
         if(!options.containsKey(optionName)) return Optional.empty();
         return Optional.of((T) options.get(optionName).getDefaultValue());
     }

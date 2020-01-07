@@ -27,14 +27,20 @@ public interface CustomMenu {
     /**
      * @return a new Bukkit inventory with all the items prepared to be used
      */
-    public Inventory getBukkitInventory();
+    default public Inventory getBukkitInventory() {
+        Inventory inventory = getNewBukkitInventory();
+        setItems(inventory);
+        return inventory;
+    };
 
     /**
      * Fills an inventory with the items described in the custom menu
      * 
      * @param inventory inventory to be filled
      */
-    public void setItems(Inventory inventory);
+    default public void setItems(Inventory inventory) {
+        inventory.setContents(getContents());
+    }
 
     /**
      * @return the contents of the menu as they should be in the {@link Inventory#getContents()}
