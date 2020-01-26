@@ -160,10 +160,12 @@ public class YouiInventory implements CustomMenu {
 
         options.put(optionName, value);
 
-        // ItemStack oldContents[] = inventory.getContents();
+        ItemStack oldContents[] = inventory.getContents();
         createInventory();
         fixPlaceholders();
-        // inventory.setContents(oldContents);
+        ItemStack newContents[] = new ItemStack[inventory.getSize()];
+        System.arraycopy(oldContents, 0, newContents, 0, newContents.length);
+        inventory.setContents(newContents);
 
         return ValidationResult.ok();
     }
