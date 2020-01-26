@@ -1,11 +1,10 @@
 package xyz.rodeldev.templates;
 
 import java.util.Arrays;
-import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
+
+import org.bukkit.inventory.ItemStack;
 
 public class Option<T> {
     private String name;
@@ -16,7 +15,6 @@ public class Option<T> {
     public Option(String name, T defaultValue){
         this.name = name;
         this.defaultValue = defaultValue;
-
     }
 
     public Option<T> setDefaultValue(T defaultValue){
@@ -72,6 +70,6 @@ public class Option<T> {
     }
 
     public static boolean validType(Object t){
-        return t.getClass().isEnum() || t instanceof String || t instanceof Number || t instanceof Boolean;
+        return t.getClass().isEnum() || t instanceof ItemStack || t instanceof String || t instanceof Number || t instanceof Boolean;
     }
 }

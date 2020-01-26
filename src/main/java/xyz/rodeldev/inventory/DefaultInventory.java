@@ -10,6 +10,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
+import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.templates.Template;
 
 /**
@@ -25,6 +26,10 @@ public class DefaultInventory implements CustomMenu {
     public DefaultInventory(Template template){
         this.template = template;
         inventory = Helper.createInventory(template.getInventoryType(), template.getInventorySize(), template.getOptionString("title"));
+    }
+
+    public HashMap<String, List<Integer>> getPlaceholders(){
+        return placeholders;
     }
 
     public void addDefaultPlaceholder(String name, int slot) throws UnsupportedOperationException{
@@ -58,6 +63,12 @@ public class DefaultInventory implements CustomMenu {
     }
 
     @Override
+    public List<Integer> slotsWithPlaceholder(String placeholder) {
+        if(template.getPlaceholder(placeholder)==null) {YouiPlugin.getInstance().getLogger().warning("Trying to find unexisting placeholder \""+placeholder+"\" in template \""+template.getFullName()+"\".");}
+        return this.placeholders.getOrDefault(placeholder, new ArrayList<>());
+    }
+    
+    @Override
     public List<String> getPlaceholdersIn(int slot) {
         List<String> placeholders = new ArrayList<>();
         for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
@@ -69,14 +80,15 @@ public class DefaultInventory implements CustomMenu {
         }
         return placeholders;
     }
-
+    
     @Override
     public Template getTemplate() {
         return template;
     }
-
+    
     @Override
     public boolean hasPlaceholder(int slot, String placeholder) {
+        if(template.getPlaceholder(placeholder)==null) {YouiPlugin.getInstance().getLogger().warning("Trying to find unexisting placeholder \""+placeholder+"\" in template \""+template.getFullName()+"\".");}
         for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
             if(placeholderList.getKey().equalsIgnoreCase(placeholder)){
                 for(int slt : placeholderList.getValue()){
@@ -93,7 +105,9 @@ public class DefaultInventory implements CustomMenu {
     public ItemStack[] getContents() {
         ItemStack[] contents = new ItemStack[inventory.getContents().length];
         for(int i = 0; i < contents.length; i++){
-            contents[i] = inventory.getContents()[i].clone();
+            if(inventory.getContents()[i]!=null){
+                contents[i] = inventory.getContents()[i].clone();
+            }
         }
         return contents;
     }

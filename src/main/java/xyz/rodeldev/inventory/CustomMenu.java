@@ -56,13 +56,25 @@ public interface CustomMenu {
     public List<String> getPlaceholdersIn(int slot);
  
     /**
-     * Tells whenever a slot contains a placeholder
+     * Tells whenever a slot contains a placeholder <br>
+     * <br>
+     * This also outputs a warning if the placeholder is not defined in the template
      * 
      * @param slot the slot to search
      * @param placeholder the placeholder to find (not case sensitive)
      * @return true if the slot contains that placeholder
      */
     public boolean hasPlaceholder(int slot, String placeholder);
+
+    /**
+     * Fetch all slots containing a placeholder <br>
+     * <br>
+     * This also outputs a warning if the placeholder is not defined in the template
+     * 
+     * @param placeholder the placeholder name to find
+     * @return a list of the slot indexes
+     */
+    public List<Integer> slotsWithPlaceholder(String placeholder);
 
     /**
      * Using the {@link Template#registerOption(xyz.rodeldev.templates.Option)} you can register customizable options to your GUI.

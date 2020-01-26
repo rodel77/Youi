@@ -20,6 +20,7 @@ import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.XMaterial;
+import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
@@ -40,9 +41,17 @@ public class YouiInventory implements CustomMenu {
     public ItemStack[] getContents() {
         ItemStack[] contents = new ItemStack[this.inventory.getContents().length];
         for(int i = 0; i < contents.length; i++){
-            contents[i] = this.inventory.getContents()[i].clone();
+            if(this.inventory.getContents()[i]!=null){
+                contents[i] = this.inventory.getContents()[i].clone();
+            }
         }
         return contents;
+    }
+
+    @Override
+    public List<Integer> slotsWithPlaceholder(String placeholder) {
+        if(template.getPlaceholder(placeholder)==null) {YouiPlugin.getInstance().getLogger().warning("Trying to find unexisting placeholder \""+placeholder+"\" in template \""+template.getFullName()+"\".");}
+        return this.placeholders.getOrDefault(placeholder, new ArrayList<>());
     }
 
     @Override
@@ -75,6 +84,7 @@ public class YouiInventory implements CustomMenu {
 
     @Override
     public boolean hasPlaceholder(int slot, String placeholder) {
+        if(template.getPlaceholder(placeholder)==null) YouiPlugin.getInstance().getLogger().warning("Trying to find unexisting placeholder \""+placeholder+"\" in template \""+template.getFullName()+"\".");
         for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
             if(placeholderList.getKey().equalsIgnoreCase(placeholder)){
                 for(int slt : placeholderList.getValue()){
@@ -238,7 +248,9 @@ public class YouiInventory implements CustomMenu {
         JsonObject options = new JsonObject();
         for(Entry<String, Object> entry : this.options.entrySet()){
             Object value = entry.getValue();
-            if(value instanceof Boolean){
+            if(value instanceof ItemStack){
+                options.add(entry.getKey(), Helper.serializeItemStack((ItemStack) value));
+            }else if(value instanceof Boolean){
                 options.addProperty(entry.getKey(), (Boolean)entry.getValue());
             }else if(value instanceof Number){
                 options.addProperty(entry.getKey(), (Number)entry.getValue());
@@ -258,60 +270,57 @@ public class YouiInventory implements CustomMenu {
         }
         element.add("placeholders", placeholders);
 
-        YamlConfiguration conf = new YamlConfiguration();
+        JsonObject items = new JsonObject();
         for(int i = 0; i < inventory.getContents().length; i++){
             if(inventory.getContents()[i]!=null){
-                conf.set(String.valueOf(i), inventory.getContents()[i]);
-                conf.set("xmaterial:"+String.valueOf(i), XMaterial.matchXMaterial(inventory.getContents()[i]).toString());
+                items.add(String.valueOf(i), Helper.serializeItemStack(inventory.getContents()[i]));
             }
         }
-        element.addProperty("items", conf.saveToString());
+        element.add("items", items);
 
         return element;
     }
 
     public void deserialize(JsonObject element){
-        template = TemplateRegistry.get(element.get("template").getAsString());
-
-        JsonObject options = element.get("options").getAsJsonObject();
-        for(Option<?> option : template.getOptions()){
-            if(options.has(option.getName())){
-                JsonElement optionObject = options.get(option.getName());
-
-                Object value;
-                if(option.getDefaultValue() instanceof Number){
-                    value = Helper.str2num(optionObject.getAsString(), option.getDefaultValue().getClass());
-                }else if(option.getDefaultValue() instanceof Boolean){
-                    value = optionObject.getAsBoolean();
-                }else{
-                    value = optionObject.getAsString();
-                    if(option.isEnum()){
-                        value = option.asEnum((String)value);
-                    }
-                }
-
-                this.options.put(option.getName(), value);
-            }
-        }
-
-        JsonObject placeholders = element.get("placeholders").getAsJsonObject();
-        for(Entry<String, JsonElement> placeholderInfo : placeholders.entrySet()){
-            List<Integer> slotList = new ArrayList<>();
-            for(JsonElement slot : placeholderInfo.getValue().getAsJsonArray()){
-                slotList.add(slot.getAsInt());
-            }
-            this.placeholders.put(placeholderInfo.getKey(), slotList);
-        }
-
-        createInventory();
-
         try{
-            YamlConfiguration section = new YamlConfiguration();
-            section.loadFromString(element.get("items").getAsString());
-            for(String key : section.getKeys(false)){
-                if(!key.contains("xmaterial")){
-                    inventory.setItem(Integer.valueOf(key), section.getItemStack(key));
+            template = TemplateRegistry.get(element.get("template").getAsString());
+
+            JsonObject options = element.get("options").getAsJsonObject();
+            for(Option<?> option : template.getOptions()){
+                if(options.has(option.getName())){
+                    JsonElement optionObject = options.get(option.getName());
+
+                    Object value;
+                    if(option.getDefaultValue() instanceof ItemStack){
+                        value = Helper.deserializeItemStack(optionObject.getAsJsonObject());
+                    }else if(option.getDefaultValue() instanceof Number){
+                        value = Helper.str2num(optionObject.getAsString(), option.getDefaultValue().getClass());
+                    }else if(option.getDefaultValue() instanceof Boolean){
+                        value = optionObject.getAsBoolean();
+                    }else{
+                        value = optionObject.getAsString();
+                        if(option.isEnum()){
+                            value = option.asEnum((String)value);
+                        }
+                    }
+
+                    this.options.put(option.getName(), value);
                 }
+            }
+
+            JsonObject placeholders = element.get("placeholders").getAsJsonObject();
+            for(Entry<String, JsonElement> placeholderInfo : placeholders.entrySet()){
+                List<Integer> slotList = new ArrayList<>();
+                for(JsonElement slot : placeholderInfo.getValue().getAsJsonArray()){
+                    slotList.add(slot.getAsInt());
+                }
+                this.placeholders.put(placeholderInfo.getKey(), slotList);
+            }
+
+            createInventory();
+
+            for(Entry<String, JsonElement> entry : element.get("items").getAsJsonObject().entrySet()){
+                inventory.setItem(Integer.valueOf(entry.getKey()), Helper.deserializeItemStack(entry.getValue().getAsJsonObject()));
             }
         }catch(Exception e){
             e.printStackTrace();

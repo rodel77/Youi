@@ -49,6 +49,7 @@ public class CreateCommand extends ISubCommand {
         session.setName(name.replace(" ", "_"));
         session.setTemplate(template);
         session.createInventory();
+        session.setDefaults();
         session.resume(player);
         session.save();
 

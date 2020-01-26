@@ -6,9 +6,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
+import xyz.rodeldev.XMaterial;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.session.Session;
 import xyz.rodeldev.templates.Option;
@@ -43,12 +46,28 @@ public class OptionCommand extends ISubCommand {
             String lastArgs[] = new String[args.length-1];
             System.arraycopy(args, 1, lastArgs, 0, lastArgs.length);
 
-            ValidationResult result = 
-            session.getYouiInventory().setOptionValue(args[0], Arrays.asList(lastArgs).stream().collect(Collectors.joining(" ")));
+            Option<?> option = template.getOption(args[0]);
+            if(option==null){
+                Helper.sendMessage(sender, "&cCan't found option %s", args[0]);
+                return true;
+            }
+
+            ValidationResult result;
+            
+            if(option.getDefaultValue() instanceof ItemStack){
+                YamlConfiguration section = new YamlConfiguration();
+                ItemStack item = (ItemStack) player.getItemInHand();
+                section.set("item", item);
+                section.set("xmaterial", XMaterial.matchXMaterial(item).name());
+
+                result = session.getYouiInventory().setOptionValue(args[0], section.saveToString());
+            }else{
+                result = session.getYouiInventory().setOptionValue(args[0], Arrays.asList(lastArgs).stream().collect(Collectors.joining(" ")));
+            }
             if(result.getError().isPresent()){
                 Helper.sendMessage(sender, result.getError().get());
             }else{
-                Helper.sendMessage(sender, "Option changed!");
+                Helper.sendMessage(sender, "Option updated!");
             }
             session.save();
         }
@@ -73,6 +92,8 @@ public class OptionCommand extends ISubCommand {
                         for(Object enumConstant : option.getDefaultValue().getClass().getEnumConstants()){
                             result.add(((Enum<?>)enumConstant).name());
                         }
+                    }else if(option.getDefaultValue() instanceof ItemStack){
+                        result.add("hand");
                     }
                 }
             }

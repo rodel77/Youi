@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
+import xyz.rodeldev.inventory.DefaultInventory;
 import xyz.rodeldev.inventory.YouiInventory;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
@@ -140,6 +141,18 @@ public class Session {
 
     public void createInventory(){
         youiInventory.createInventory();
+    }
+
+    public void setDefaults(){
+        DefaultInventory defaults = getTemplate().getDefault();
+        if(defaults!=null){
+            youiInventory.getInventory().setContents(defaults.getContents());
+            for(Entry<String, List<Integer>> placeholder : defaults.getPlaceholders().entrySet()){
+                for(int slot : placeholder.getValue()){
+                    youiInventory.setPlaceholder(placeholder.getKey(), slot);
+                }
+            }
+        }
     }
 
     public void resume(Player player){

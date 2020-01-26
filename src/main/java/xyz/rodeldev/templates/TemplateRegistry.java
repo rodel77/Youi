@@ -12,6 +12,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import org.bukkit.Material;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import xyz.rodeldev.YouiPlugin;
@@ -24,7 +26,7 @@ public class TemplateRegistry {
 
     public TemplateRegistry(){
         // @TODO: remove this
-        register(new Template(YouiPlugin.getInstance(), "test").registerPlaceholders("button1").registerPlaceholder(new Placeholder("constrainedph").setConstraint(1, 2)));
+        register(new Template(YouiPlugin.getInstance(), "test").registerPlaceholders("button1").registerPlaceholder(new Placeholder("constrainedph").setConstraint(1, 2)).defaultFillInventory(new ItemStack(Material.ACACIA_DOOR)).defaultAddPlaceholder("button1", 1).defaultSetItem(new ItemStack(Material.DIAMOND), 1));
         loadOverrideMap();
     }
 
@@ -121,6 +123,12 @@ public class TemplateRegistry {
             registry.put(template.getFullName(), template);
         }catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+    public static void register(Template... templates){
+        for(Template template : templates){
+            register(template);
         }
     }
 }

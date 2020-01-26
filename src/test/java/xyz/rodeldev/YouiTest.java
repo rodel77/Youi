@@ -3,7 +3,13 @@ package xyz.rodeldev;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.Map.Entry;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.UnsafeValues;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.junit.Before;
 import org.junit.Test;

@@ -38,6 +38,10 @@ public class Template {
         }));
     }
 
+    public DefaultInventory getDefault(){
+        return defaultInventory;
+    }
+
     public Template defaultAddPlaceholder(String name, int slot){
         if(defaultInventory==null) defaultInventory = new DefaultInventory(this);
         defaultInventory.addDefaultPlaceholder(name, slot);
@@ -52,9 +56,8 @@ public class Template {
 
     public Template defaultFillInventory(ItemStack item){
         if(defaultInventory==null) defaultInventory = new DefaultInventory(this);
-        ItemStack[] contents = defaultInventory.getInventory().getContents();
-        for(int i = 0; i < contents.length; i++){
-            contents[i] = item;
+        for(int i = 0; i < defaultInventory.getInventory().getSize(); i++){
+            defaultInventory.getInventory().setItem(i, item);
         }
         return this;
     }
@@ -64,12 +67,12 @@ public class Template {
      * 
      * @return the player made menu or the default menu or null
      */
-    public CustomMenu getOverride(){
+    public CustomMenu getOverride(boolean useDefault){
         CustomMenu customMenu = TemplateRegistry.getOverrideMap().get(this);
         if(customMenu!=null){
             return customMenu;
         }
-        return defaultInventory;
+        return useDefault ? defaultInventory : null;
     }
 
     public ImmutableList<Placeholder> getPlaceholders(){

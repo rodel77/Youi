@@ -22,8 +22,9 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
         commands.add(new ListCommand());
         commands.add(new OverrideCommand());
         commands.add(new CloseCommand());
-        commands.add(new ClearPlaceholders());
+        commands.add(new ClearPlaceholdersCommand());
         commands.add(new DeleteCommand());
+        commands.add(new TestCommand());
     }
 
     @Override
@@ -57,10 +58,11 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
 
                 if(!subCommand.execute(sender, subCommandArgs)){
                     Helper.sendMessage(sender, subCommand.getHelp());
-                    return true;
                 }
+                return true;
             }
         }
+        displayHelp(sender);
         return true;
     }
 

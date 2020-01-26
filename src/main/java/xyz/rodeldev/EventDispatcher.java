@@ -44,8 +44,13 @@ public class EventDispatcher implements Listener {
                         Helper.sendMessage(player, "&6You can also clear all the placeholders from this slot using /youi clearplaceholders", e.getSlot());
                     }
                 }else if(session.getPlaceholderInventory()!=null && session.getPlaceholderInventory()==e.getInventory()){
-                    Helper.sendMessage(player, "&cThis is just a visualization inventory.");
                     e.setCancelled(true);
+                    if(!session.getYouiInventory().getPlaceholdersIn(e.getSlot()).isEmpty()){
+                        session.getYouiInventory().removePlaceholders(e.getSlot());
+                        session.refreshPlaceholders();
+                        session.save();
+                        Helper.sendMessage(player, "Slot cleared from placeholders");
+                    }
                 }
             }
         }

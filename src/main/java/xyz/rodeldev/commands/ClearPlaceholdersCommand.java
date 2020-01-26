@@ -7,7 +7,7 @@ import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.session.Session;
 
-public class ClearPlaceholders extends ISubCommand {
+public class ClearPlaceholdersCommand extends ISubCommand {
     @Override
     public boolean execute(CommandSender sender, String[] args) {
         Player player = (Player) sender;
