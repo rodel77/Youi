@@ -163,6 +163,13 @@ public class YouiInventory implements CustomMenu {
             value = valueString;
         }
 
+        return setOptionValue(optionName, value);
+    }
+
+    public ValidationResult setOptionValue(String optionName, Object value){
+        Option<?> option = template.getOption(optionName);
+        if(option==null) return ValidationResult.error("Invalid option");
+
         ValidationResult result = option.checkValidation(value);
         if(result.getError().isPresent()){
             return result;

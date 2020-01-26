@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -33,14 +34,14 @@ public class OptionCommand extends ISubCommand {
         if(args.length==0){
             Helper.sendMessage(sender, "&cPlease specify an option, available:");
             for(Option<?> option : template.getOptions()){
-                Helper.sendMessage(sender, option.getName()+" (default: "+option.getDefaultValue().toString()+")");
+                Helper.sendMessage(sender, "%s (default: %s)", option.getName(), option.getDefaultValue().toString());
             }
         }else if(args.length==1){
             Optional<String> optionString = session.getYouiInventory().getOptionAsString(args[0]);
             if(optionString.isPresent()){
-                Helper.sendMessage(sender, "&aValue of "+args[0]+" "+optionString.get());
+                Helper.sendMessage(sender, "&aValue of %s = %s", args[0], optionString.get());
             }else{
-                Helper.sendMessage(sender, "&cCan't find value of "+args[0]);
+                Helper.sendMessage(sender, "&cCan't find value of %s", args[0]);
             }
         }else if(args.length>=2){
             String lastArgs[] = new String[args.length-1];
@@ -55,12 +56,17 @@ public class OptionCommand extends ISubCommand {
             ValidationResult result;
             
             if(option.getDefaultValue() instanceof ItemStack){
-                YamlConfiguration section = new YamlConfiguration();
-                ItemStack item = (ItemStack) player.getItemInHand();
-                section.set("item", item);
-                section.set("xmaterial", XMaterial.matchXMaterial(item).name());
+                if(!args[1].equalsIgnoreCase("hand")){
+                    Helper.sendMessage(sender, "Please use /youi option <option-name> hand");
+                    return true;
+                }
 
-                result = session.getYouiInventory().setOptionValue(args[0], section.saveToString());
+                ItemStack hand = player.getItemInHand();
+                if(hand==null || hand.getType()==Material.AIR){
+                    return true;
+                }
+
+                result = session.getYouiInventory().setOptionValue(args[0], hand);
             }else{
                 result = session.getYouiInventory().setOptionValue(args[0], Arrays.asList(lastArgs).stream().collect(Collectors.joining(" ")));
             }
