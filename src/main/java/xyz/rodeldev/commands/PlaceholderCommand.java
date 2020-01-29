@@ -76,7 +76,7 @@ public class PlaceholderCommand extends ISubCommand {
 
     @Override
     public String getHelp() {
-        return super.getHelp()+" [name] &7(Set placeholder of the selected (shift + right click) slot in the editing menu or visualize the placeholders)";
+        return super.getHelp()+" [name] [selector_name1:selector1_value] [selector_namen:selectorn_value]... &7(Set placeholder of the selected (shift + right click) slot in the editing menu or visualize the placeholders)";
     }
 
     @Override

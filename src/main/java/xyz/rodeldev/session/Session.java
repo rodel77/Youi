@@ -54,25 +54,25 @@ public class Session {
     public void displayPlaceholderList(){
         for(Placeholder placeholder : getTemplate().getPlaceholders()){
             if(slotHasPlaceholder(placeholder.getName())){
-                Helper.sendMessage(owner, "&c%s (Unavailable)", placeholder.getName());
+                Helper.sendMessage(owner, "&c%s (Unavailable) &8%s", placeholder.getName(), placeholder.getDescription());
                 continue;
             }
 
             int placeholderCount = youiInventory.countPlaceholders(placeholder.getName());
             if(placeholder.isConstrained()){
                 if(placeholder.getMin()==0){
-                    Helper.sendMessage(owner, "&7%s &6(%d/%d)", placeholder.getName(), placeholderCount, placeholder.getMax());
+                    Helper.sendMessage(owner, "&7%s &6(%d/%d) &8%s", placeholder.getName(), placeholderCount, placeholder.getMax(), placeholder.getDescription());
                 }else{
                     if(placeholder.getMax()==0){
-                        Helper.sendMessage(owner, "&7%s &6(Should be at least %d)", placeholder.getName(), placeholder.getMin());
+                        Helper.sendMessage(owner, "&7%s &6(Should be at least %d) &8%s", placeholder.getName(), placeholder.getMin(), placeholder.getDescription());
                     }else if(placeholderCount>=placeholder.getMax()){
-                        Helper.sendMessage(owner, "&c%s (Unavailable)", placeholder.getName());
+                        Helper.sendMessage(owner, "&c%s (Unavailable) &8%s", placeholder.getName(), placeholder.getDescription());
                     }else{
-                        Helper.sendMessage(owner, "&7%s &6(From %d to %d, now %d)", placeholder.getName(), placeholder.getMin(), placeholder.getMax(), placeholderCount);
+                        Helper.sendMessage(owner, "&7%s &6(From %d to %d, now %d) &8%s", placeholder.getName(), placeholder.getMin(), placeholder.getMax(), placeholderCount, placeholder.getDescription());
                     }
                 }
             }else{
-                Helper.sendMessage(owner, "&7%s", placeholder.getName());
+                Helper.sendMessage(owner, "&7%s &8%s", placeholder.getName(), placeholder.getDescription());
             }
         }
     }

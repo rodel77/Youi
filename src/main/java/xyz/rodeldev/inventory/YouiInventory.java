@@ -13,13 +13,11 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
-import xyz.rodeldev.XMaterial;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.templates.Option;
 import xyz.rodeldev.templates.Placeholder;

@@ -7,12 +7,10 @@ import java.util.stream.Collectors;
 
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
-import xyz.rodeldev.XMaterial;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.session.Session;
 import xyz.rodeldev.templates.Option;
@@ -34,12 +32,12 @@ public class OptionCommand extends ISubCommand {
         if(args.length==0){
             Helper.sendMessage(sender, "&cPlease specify an option, available:");
             for(Option<?> option : template.getOptions()){
-                Helper.sendMessage(sender, "%s (default: %s)", option.getName(), option.getDefaultValue().toString());
+                Helper.sendMessage(sender, "%s (default: %s) &8%s", option.getName(), Helper.item2Readable(option.getDefaultValue()), option.getDescription());
             }
         }else if(args.length==1){
             Optional<String> optionString = session.getYouiInventory().getOptionAsString(args[0]);
             if(optionString.isPresent()){
-                Helper.sendMessage(sender, "&aValue of %s = %s", args[0], optionString.get());
+                Helper.sendMessage(sender, "&aValue of %s = %s", args[0], Helper.item2Readable(optionString.get()));
             }else{
                 Helper.sendMessage(sender, "&cCan't find value of %s", args[0]);
             }
@@ -73,7 +71,7 @@ public class OptionCommand extends ISubCommand {
             if(result.getError().isPresent()){
                 Helper.sendMessage(sender, result.getError().get());
             }else{
-                Helper.sendMessage(sender, "Option updated!");
+                Helper.sendMessage(sender, "Option %s updated", option.getName());
             }
             session.save();
         }

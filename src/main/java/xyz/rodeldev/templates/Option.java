@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import org.bukkit.inventory.ItemStack;
 
 public class Option<T> {
-    private String name;
+    private String name, description = "";
     private T defaultValue;
     private boolean editable = true;
     private Function<T, ValidationResult> validate;
@@ -15,6 +15,11 @@ public class Option<T> {
     public Option(String name, T defaultValue){
         this.name = name;
         this.defaultValue = defaultValue;
+    }
+
+    public Option<T> setDescription(String description){
+        this.description = description;
+        return this;
     }
 
     public Option<T> setDefaultValue(T defaultValue){
@@ -50,6 +55,10 @@ public class Option<T> {
 
     public String getName(){
         return name;
+    }
+
+    public String getDescription(){
+        return description;
     }
 
     public T getDefaultValue(){

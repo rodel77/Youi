@@ -36,7 +36,7 @@ public class ListCommand extends ISubCommand {
 
                 for(Template template : TemplateRegistry.getRegistry()){
                     if(pluginSelector!=null && template.getOwner()!=pluginSelector) continue;
-                    Helper.sendMessage(sender, template.getFullName());
+                    Helper.sendMessage(sender, "%s &8%s", template.getFullName(), template.getDescription());
                 }
 
                 return true;

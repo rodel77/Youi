@@ -15,7 +15,7 @@ import xyz.rodeldev.inventory.DefaultInventory;
 
 public class Template {
     private Plugin owner;
-    private String name;
+    private String name, description = "";
 
     private DefaultInventory defaultInventory;
 
@@ -40,6 +40,15 @@ public class Template {
 
     public DefaultInventory getDefault(){
         return defaultInventory;
+    }
+
+    public String getDescription(){
+        return description;
+    }
+
+    public Template setDescription(String description){
+        this.description = description;
+        return this;
     }
 
     public Template defaultAddPlaceholder(String name, int slot){

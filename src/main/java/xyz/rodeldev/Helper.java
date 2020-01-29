@@ -121,26 +121,21 @@ public class Helper {
         return null;
     }
 
-    // public static void deserialize(Object object){
-    //     if(object instanceof Collection){
-    //         for(Object inner : (Collection<?>)object){
-    //             deserialize(inner);
-    //         }
-    //         return;
-    //     }
+    public static String item2Readable(Object o){
+        if(o instanceof ItemStack){
+            ItemStack item = (ItemStack) o;
+            StringBuffer name = new StringBuffer();
+            for(String word : item.getType().toString().split("_")){
+                name.append(word.charAt(0)).append(word.substring(1).toLowerCase());
+            }
+    
+            if(item.getAmount()>0) name.append(" x "+item.getAmount());
+    
+            return name.toString();
+        }
 
-    //     if(object instanceof Map){
-    //         Map<String, Object> map = (Map<String,Object>) object;
-    //         for(Entry<String, Object> entry : map.entrySet()){
-    //             deserialize(entry.getValue());
-    //         }
-
-    //         if(map.containsKey("==")){
-    //             System.out.println("Deserializing alias: "+map.get("=="));
-    //             ConfigurationSerialization.deserializeObject(map);
-    //         }
-    //     }
-    // }
+        return o.toString();
+    }
 
     public static Inventory createInventory(InventoryType type, int size, String title){
         if(type==InventoryType.CHEST){
