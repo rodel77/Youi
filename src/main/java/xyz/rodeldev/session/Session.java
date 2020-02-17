@@ -3,6 +3,7 @@ package xyz.rodeldev.session;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -29,7 +30,7 @@ public class Session {
     private int slotFocus = -1;
 
     private Inventory placeholderInventory;
-    
+
     public Session(Player owner){
         this.owner = owner;
         youiInventory = new YouiInventory();
@@ -147,15 +148,12 @@ public class Session {
         DefaultInventory defaults = getTemplate().getDefault();
         if(defaults!=null){
             youiInventory.getInventory().setContents(defaults.getContents());
-            for(Entry<String, List<Integer>> placeholder : defaults.getPlaceholders().entrySet()){
-                for(int slot : placeholder.getValue()){
-                    youiInventory.setPlaceholder(placeholder.getKey(), slot);
-                }
-            }
+            youiInventory.setPlaceholders((HashMap<Integer, List<String>>)defaults.getInversePlaceholders().clone());
         }
     }
 
     public void resume(Player player){
+        markPlaceholders();
         player.openInventory(getInventory());
     }
 
@@ -166,6 +164,7 @@ public class Session {
             JsonElement element = parser.parse(reader);
             JsonObject jsonObject = element.getAsJsonObject();
             youiInventory.deserialize(jsonObject);
+            markPlaceholders();
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -178,8 +177,15 @@ public class Session {
             JsonElement element = parser.parse(json);
             JsonObject jsonObject = element.getAsJsonObject();
             youiInventory.deserialize(jsonObject);
+            markPlaceholders();
         } catch(Exception e){
             e.printStackTrace();
+        }
+    }
+
+    public void markPlaceholders(){
+        for(Entry<Integer, List<String>> slots : youiInventory._getPlaceholders().entrySet()){
+            Helper.setPlaceholders(youiInventory.getInventory().getItem(slots.getKey()), slots.getValue());
         }
     }
 

@@ -49,7 +49,7 @@ public class PlaceholderCommand extends ISubCommand {
             return true;
         }
 
-        session.getYouiInventory().setPlaceholder(placeholder.getName(), session.getSlotFocus());
+        // session.getYouiInventory().setPlaceholder(placeholder.getName(), session.getSlotFocus());
         session.focusSlot(-1);
         session.save();
         session.resume(player);

@@ -1,30 +1,103 @@
 package xyz.rodeldev;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Stack;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
+import java.util.Stack;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.internal.LazilyParsedNumber;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import xyz.rodeldev.inventory.YouiInventory;
 
 public class Helper {
+	public static void stripPlaceholders(ItemStack item){
+		ItemMeta meta;
+		if(item==null || item.getType()==Material.AIR || !item.hasItemMeta() || !(meta = item.getItemMeta()).hasLore()){
+			return;
+		}
+
+		List<String> lore = new ArrayList<>();
+		for(int i = 0; i < lore.size(); i++){
+			String line = lore.get(i);
+			if(line.equals(YouiInventory.PLACEHOLDER_LORE)){
+				if(i+1<lore.size()){
+					lore.remove(i+1);
+				}
+				lore.remove(i);
+			}
+		}
+
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+	}
+
+	public static List<String> getPlaceholders(ItemStack item){
+		ItemMeta meta;
+		if(item==null || item.getType()==Material.AIR || !item.hasItemMeta() || !(meta = item.getItemMeta()).hasLore()){
+			return null;
+		}
+
+		for(int i = 0; i < meta.getLore().size(); i++){
+			String line = meta.getLore().get(i);
+			if(line.equals(YouiInventory.PLACEHOLDER_LORE) && i+1<meta.getLore().size()){
+				return Arrays.asList(ChatColor.stripColor(meta.getLore().get(i+1)).trim().split(","));
+			}
+		}
+
+		return null;
+	}
+
+	public static void setPlaceholders(ItemStack item, List<String> placeholders){
+        if(item==null || item.getType()==Material.AIR){
+            return;
+        }
+
+		ItemMeta meta = item.getItemMeta();
+		List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
+		int index = lore.size();
+		for(int i = 0; i < lore.size(); i++){
+			String line = lore.get(i);
+			if(line.equals(YouiInventory.PLACEHOLDER_LORE)){
+				index = i;
+				break;
+			}
+		}
+
+		if(index>=lore.size()){
+			lore.add(YouiInventory.PLACEHOLDER_LORE);
+		}
+
+		String placeholdersString = ChatColor.GOLD+String.join(",", placeholders);
+
+		if(index+1>=lore.size()){
+			lore.add(placeholdersString);
+		}else{
+			lore.set(index+1, placeholdersString);
+		}
+
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+	}
+
+
     public static JsonElement serializeItemStack(ItemStack item){
         return serializeField(item);
     }

@@ -28,8 +28,23 @@ public class DefaultInventory implements CustomMenu {
         inventory = Helper.createInventory(template.getInventoryType(), template.getInventorySize(), template.getOptionString("title"));
     }
 
+    @Deprecated
     public HashMap<String, List<Integer>> getPlaceholders(){
         return placeholders;
+    }
+
+    public HashMap<Integer, List<String>> getInversePlaceholders(){
+        HashMap<Integer, List<String>> map = new HashMap<>();
+        for(Entry<String, List<Integer>> entry : placeholders.entrySet()){
+            for(int slot : entry.getValue()){
+                if(!map.containsKey(slot)){
+                    map.put(slot, new ArrayList<>());
+                }
+
+                map.get(slot).add(entry.getKey());
+            }
+        }
+        return map;
     }
 
     public void addDefaultPlaceholder(String name, int slot) throws UnsupportedOperationException{
