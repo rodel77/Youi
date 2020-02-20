@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 import java.util.Stack;
 
 import com.google.gson.JsonArray;
@@ -58,7 +59,7 @@ public class Helper {
 		for(int i = 0; i < meta.getLore().size(); i++){
 			String line = meta.getLore().get(i);
 			if(line.equals(YouiInventory.PLACEHOLDER_LORE) && i+1<meta.getLore().size()){
-				return Arrays.asList(ChatColor.stripColor(meta.getLore().get(i+1)).trim().split(","));
+				return Arrays.stream(ChatColor.stripColor(meta.getLore().get(i+1)).trim().split(",")).collect(Collectors.toList());
 			}
 		}
 
@@ -67,6 +68,11 @@ public class Helper {
 
 	public static void setPlaceholders(ItemStack item, List<String> placeholders){
         if(item==null || item.getType()==Material.AIR){
+            return;
+        }
+
+        if(placeholders.isEmpty()){
+            Helper.stripPlaceholders(item);
             return;
         }
 

@@ -1,15 +1,20 @@
 package xyz.rodeldev.commands;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.session.Session;
+import xyz.rodeldev.session.SessionManager;
 import xyz.rodeldev.templates.Placeholder;
-import xyz.rodeldev.templates.Template;
 
 public class PlaceholderCommand extends ISubCommand {
     @Override
@@ -21,39 +26,73 @@ public class PlaceholderCommand extends ISubCommand {
             return true;
         }
 
-        if(args.length<1){
-            session.openPlaceholdersMenu(player);
+        if(args.length<1) return false;
+
+        SubAction action = null;
+        for(SubAction a : SubAction.values()){
+            if(a.name().equalsIgnoreCase(args[0])){
+                action = a;
+                break;
+            }
+        }
+
+        if(action==null || (action!=SubAction.LIST && action!=SubAction.CLEAR && args.length<2)) return false;
+
+        ItemStack item = null;
+
+        switch(action) {
+            case LIST:
+                session.displayPlaceholderList();
+                return true;
+            case HELP:
+                for(Placeholder placeholder : session.getTemplate().getPlaceholders()){
+                    if(placeholder.getName().equalsIgnoreCase(args[1])){
+                        session.displayPlaceholderInfo(placeholder);
+                        return true;
+                    }
+                }
+                Helper.sendMessage(sender, "&cInvalid placeholder, use \"/youi placeholder list\" to see the complete list");
+                return true;
+            case ADD:
+            case REMOVE:
+            case CLEAR:
+                item = player.getItemInHand();
+                if(item==null || item.getType()==Material.AIR){
+                    Helper.sendMessage(sender, "&cNo item in hand");
+                    return true;
+                }
+                break;
+        }
+
+        if(action==SubAction.CLEAR){
+            Helper.stripPlaceholders(item);
             return true;
         }
 
-        if(session.getSlotFocus()==-1){
-            Helper.sendMessage(sender, "&cYou don't have any slot selected, please shift + right click on a slot to select focus it, then execute this command");
-            return true;
+        List<String> placeholders = Helper.getPlaceholders(item);
+        if(placeholders==null) placeholders = new ArrayList<>();
+
+        switch(action){
+            case ADD:
+                if(placeholders.contains(args[1].toLowerCase())){
+                    Helper.sendMessage(sender, "&cThis placeholder is already added");
+                }else{
+                    placeholders.add(args[1]);
+                    Helper.sendMessage(sender, "&aPlaceholder %s added", args[1]);
+                }
+                break;
+                case REMOVE:
+                if(placeholders.remove(args[1])){
+                    Helper.sendMessage(sender, "&aPlaceholder %s removed", args[1]);
+                }else{
+                    Helper.sendMessage(sender, "&cThere is not such \"%s\" placeholder", args[1]);
+                    return true;
+                }
+                break;
+            default: break;
         }
 
-        Placeholder placeholder = session.getTemplate().getPlaceholder(args[0]);
-        if(placeholder==null){
-            Helper.sendMessage(sender, "&cInvalid placeholder, here's the list:");
-            session.displayPlaceholderList();
-            return true;
-        }
-
-        int countPlaceholders = session.getYouiInventory().countPlaceholders(placeholder.getName());
-        if(!placeholder.isInRange(countPlaceholders+1)){
-            Helper.sendMessage(sender, "&cThis placeholder should appear more than %d but less than %d, now %d", placeholder.getMin(), placeholder.getMax(), countPlaceholders);
-            return true;
-        }
-
-        if(session.slotHasPlaceholder(placeholder.getName())){
-            Helper.sendMessage(sender, "&cThe slot already has this placeholder");
-            return true;
-        }
-
-        // session.getYouiInventory().setPlaceholder(placeholder.getName(), session.getSlotFocus());
-        session.focusSlot(-1);
-        session.save();
-        session.resume(player);
-        Helper.sendMessage(sender, "Placeholder set");
+        Helper.setPlaceholders(item, placeholders);
 
         return true;
     }
@@ -61,22 +100,25 @@ public class PlaceholderCommand extends ISubCommand {
     @Override
     public void tabComplete(CommandSender sender, String[] args, List<String> result) {
         Player player = (Player) sender;
-        Session session = YouiPlugin.getInstance().getSessionManager().getSession(player.getUniqueId());
-        if(session!=null && session.getSlotFocus()!=-1){
-            Template template = session.getTemplate();
-            for(Placeholder placeholder : template.getPlaceholders()){
-                if(placeholder.getMax()!=0 && session.getYouiInventory().countPlaceholders(placeholder.getName())+1>placeholder.getMax()) continue;
-                
-                if(session.slotHasPlaceholder(placeholder.getName())) continue;
-
-                result.add(placeholder.getName());
+        if(args.length==1){
+            Arrays.stream(SubAction.values()).map(SubAction::name).map(String::toLowerCase).forEach(str -> result.add(str));
+        }else if(args.length==2){
+            Session session = YouiPlugin.getInstance().getSessionManager().getSession(player.getUniqueId());
+            if(session==null) return;
+            for(SubAction subAction : SubAction.values()){
+                if(subAction.name().equalsIgnoreCase(args[0])){
+                    if(subAction==SubAction.ADD || subAction==SubAction.REMOVE || subAction==SubAction.LIST){
+                        session.getTemplate().getPlaceholders().stream().map(Placeholder::getName).forEach(rs -> result.add(rs));
+                    }
+                    return;
+                }
             }
         }
     }
 
     @Override
     public String getHelp() {
-        return super.getHelp()+" [name] [selector_name1:selector1_value] [selector_namen:selectorn_value]... &7(Set placeholder of the selected (shift + right click) slot in the editing menu or visualize the placeholders)";
+        return super.getHelp()+" <"+Arrays.stream(SubAction.values()).map(SubAction::name).map(String::toLowerCase).collect(Collectors.joining("|"))+"> [placeholder-name] [selectors]";
     }
 
     @Override
@@ -87,5 +129,9 @@ public class PlaceholderCommand extends ISubCommand {
     @Override
     public String getName() {
         return "placeholder";
+    }
+
+    enum SubAction {
+        ADD, REMOVE, CLEAR, LIST, HELP;
     }
 }
