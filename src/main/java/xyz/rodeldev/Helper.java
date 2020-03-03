@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 import java.util.Stack;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -26,9 +27,30 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import xyz.rodeldev.inventory.PlaceholderInstance;
 import xyz.rodeldev.inventory.YouiInventory;
 
 public class Helper {
+
+    public static Gson gson = new Gson();
+
+    // public static Tuple<String, @Nullable JsonElement> getPlaceholderData(String input) throws JsonSyntaxException {
+    //     int index = input.lastIndexOf("{");
+    //     int arrayIndex = input.indexOf("[");
+    //     if(index==-1 || (arrayIndex!=-1 && arrayIndex<index)){
+    //         index = arrayIndex;
+    //     }
+    //     if(index<0){
+    //         return new Tuple<>(input, null);
+    //     }
+
+    //     return new Tuple<>(input.substring(0, index), gson.fromJson(input.substring(index), JsonElement.class));
+    // }
+
+    // public static String createPlaceholderData(Tuple<String, @Nullable JsonElement> data){
+    //     return data.b==null ? data.a : data.a+data.b.toString();
+    // }
+
 	public static void stripPlaceholders(ItemStack item){
 		ItemMeta meta;
 		if(item==null || item.getType()==Material.AIR || !item.hasItemMeta() || !(meta = item.getItemMeta()).hasLore()){
@@ -50,7 +72,7 @@ public class Helper {
 		item.setItemMeta(meta);
 	}
 
-	public static List<String> getPlaceholders(ItemStack item){
+	public static List<PlaceholderInstance> getPlaceholders(ItemStack item){
 		ItemMeta meta;
 		if(item==null || item.getType()==Material.AIR || !item.hasItemMeta() || !(meta = item.getItemMeta()).hasLore()){
 			return null;
@@ -59,14 +81,14 @@ public class Helper {
 		for(int i = 0; i < meta.getLore().size(); i++){
 			String line = meta.getLore().get(i);
 			if(line.equals(YouiInventory.PLACEHOLDER_LORE) && i+1<meta.getLore().size()){
-				return Arrays.stream(ChatColor.stripColor(meta.getLore().get(i+1)).trim().split(",")).collect(Collectors.toList());
+				return Arrays.stream(meta.getLore().get(i+1).replace(ChatColor.GOLD.toString(), "").split(YouiInventory.PLACEHOLDER_SEPARATOR)).map(PlaceholderInstance::fromPlain).collect(Collectors.toList());
 			}
 		}
 
 		return null;
 	}
 
-	public static void setPlaceholders(ItemStack item, List<String> placeholders){
+	public static void setPlaceholders(ItemStack item, List<PlaceholderInstance> placeholders){
         if(item==null || item.getType()==Material.AIR){
             return;
         }
@@ -91,7 +113,8 @@ public class Helper {
 			lore.add(YouiInventory.PLACEHOLDER_LORE);
 		}
 
-		String placeholdersString = ChatColor.GOLD+String.join(",", placeholders);
+
+        String placeholdersString = ChatColor.GOLD + placeholders.stream().map(PlaceholderInstance::toPlain).collect(Collectors.joining(YouiInventory.PLACEHOLDER_SEPARATOR+ChatColor.GOLD));
 
 		if(index+1>=lore.size()){
 			lore.add(placeholdersString);

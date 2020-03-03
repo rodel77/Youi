@@ -22,7 +22,6 @@ public class YouiCommand implements CommandExecutor, TabCompleter {
         commands.add(new ListCommand());
         commands.add(new OverrideCommand());
         commands.add(new CloseCommand());
-        commands.add(new ClearPlaceholdersCommand());
         commands.add(new DeleteCommand());
         commands.add(new TestCommand());
     }

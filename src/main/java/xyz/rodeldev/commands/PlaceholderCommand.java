@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gson.JsonSyntaxException;
+
 import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -12,8 +14,8 @@ import org.bukkit.inventory.ItemStack;
 
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
+import xyz.rodeldev.inventory.PlaceholderInstance;
 import xyz.rodeldev.session.Session;
-import xyz.rodeldev.session.SessionManager;
 import xyz.rodeldev.templates.Placeholder;
 
 public class PlaceholderCommand extends ISubCommand {
@@ -69,22 +71,48 @@ public class PlaceholderCommand extends ISubCommand {
             return true;
         }
 
-        List<String> placeholders = Helper.getPlaceholders(item);
+        List<PlaceholderInstance> placeholders = Helper.getPlaceholders(item);
         if(placeholders==null) placeholders = new ArrayList<>();
+
+
+        PlaceholderInstance placeholderArg;
+        try {
+            placeholderArg = PlaceholderInstance.fromPlain(args[1]);
+        } catch (JsonSyntaxException e){
+            Helper.sendMessage(sender, "&cPlaceholder data syntax error: "+e.getMessage());
+            return true;
+        }
 
         switch(action){
             case ADD:
-                if(placeholders.contains(args[1].toLowerCase())){
-                    Helper.sendMessage(sender, "&cThis placeholder is already added");
-                }else{
-                    placeholders.add(args[1]);
-                    Helper.sendMessage(sender, "&aPlaceholder %s added", args[1]);
+                if(session.getTemplate().getPlaceholder(placeholderArg.getPlaceholderName())==null){
+                    Helper.sendMessage(sender, "&cThis placeholder doesn't not exists, please use /youi placeholder list");
+                    return true;
                 }
+
+                for(PlaceholderInstance placeholder : placeholders){
+                    if(placeholder.getPlaceholderName().equalsIgnoreCase(placeholderArg.getPlaceholderName())){
+                        Helper.sendMessage(sender, "&cThis placeholder is already added");
+                        return true;
+                    }
+                }
+
+                placeholders.add(placeholderArg);
+                Helper.sendMessage(sender, "&aPlaceholder %s added", args[1]);
+
                 break;
-                case REMOVE:
-                if(placeholders.remove(args[1])){
-                    Helper.sendMessage(sender, "&aPlaceholder %s removed", args[1]);
-                }else{
+            case REMOVE:
+                boolean removed = false;
+                for(int i = 0; i < placeholders.size(); i++){
+                    if(placeholders.get(i).getPlaceholderName().equalsIgnoreCase(placeholderArg.getPlaceholderName())){
+                        placeholders.remove(i);
+                        Helper.sendMessage(sender, "&aPlaceholder %s removed", args[1]);
+                        removed = true;
+                        break;
+                    }
+                }
+
+                if(!removed){
                     Helper.sendMessage(sender, "&cThere is not such \"%s\" placeholder", args[1]);
                     return true;
                 }
@@ -118,7 +146,7 @@ public class PlaceholderCommand extends ISubCommand {
 
     @Override
     public String getHelp() {
-        return super.getHelp()+" <"+Arrays.stream(SubAction.values()).map(SubAction::name).map(String::toLowerCase).collect(Collectors.joining("|"))+"> [placeholder-name] [selectors]";
+        return super.getHelp()+" <"+Arrays.stream(SubAction.values()).map(SubAction::name).map(String::toLowerCase).collect(Collectors.joining("|"))+"> [placeholder-name][placeholder-data]";
     }
 
     @Override

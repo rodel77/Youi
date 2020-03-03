@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -20,6 +21,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.inventory.DefaultInventory;
+import xyz.rodeldev.inventory.PlaceholderInstance;
 import xyz.rodeldev.inventory.YouiInventory;
 import xyz.rodeldev.templates.Placeholder;
 import xyz.rodeldev.templates.Template;
@@ -27,9 +29,6 @@ import xyz.rodeldev.templates.Template;
 public class Session {
     private Player owner;
     private YouiInventory youiInventory;
-    private int slotFocus = -1;
-
-    private Inventory placeholderInventory;
 
     public Session(Player owner){
         this.owner = owner;
@@ -40,18 +39,6 @@ public class Session {
         return owner;
     }
 
-    public boolean slotHasPlaceholder(String placeholderName){
-        List<Integer> slotList = getYouiInventory().getPlaceholder(placeholderName);
-        if(slotList!=null){
-            for(int slot : slotList){
-                if(slot==getSlotFocus()){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
     public void displayPlaceholderList(){
         for(Placeholder placeholder : getTemplate().getPlaceholders()){
             displayPlaceholderInfo(placeholder);
@@ -59,11 +46,6 @@ public class Session {
     }
 
     public void displayPlaceholderInfo(Placeholder placeholder){
-        if(slotHasPlaceholder(placeholder.getName())){
-            Helper.sendMessage(owner, "&c%s (Unavailable) &8%s", placeholder.getName(), placeholder.getDescription());
-            return;
-        }
-
         int placeholderCount = youiInventory.countPlaceholders(placeholder.getName());
         if(placeholder.isConstrained()){
             if(placeholder.getMin()==0){
@@ -80,14 +62,6 @@ public class Session {
         }else{
             Helper.sendMessage(owner, "&7%s &8%s", placeholder.getName(), placeholder.getDescription());
         }
-    }
-
-    public int getSlotFocus(){
-        return slotFocus;
-    }
-
-    public void focusSlot(int slot){
-        slotFocus = slot;
     }
 
     public void setTemplate(Template template){
@@ -109,40 +83,6 @@ public class Session {
     public Inventory getInventory(){
         return youiInventory.getInventory();
     }
-    public void refreshPlaceholders(){
-        if(placeholderInventory==null){
-            placeholderInventory = youiInventory.newInventory();
-        }
-
-        placeholderInventory.clear();
-
-        for(Entry<String, List<Integer>> placeholders : youiInventory.getPlaceholders().entrySet()){
-            for(int slot : placeholders.getValue()){
-                ItemStack item = placeholderInventory.getItem(slot);
-                if(item==null || item.getType()==Material.AIR){
-                    item = new ItemStack(Material.EMERALD);
-                }else{
-                    item.setAmount(Math.min(item.getMaxStackSize(), item.getAmount()+1));
-                }
-                
-                ItemMeta meta = item.getItemMeta();
-                List<String> lore = meta.hasLore() ? meta.getLore() : new ArrayList<>();
-                lore.add(placeholders.getKey());
-                meta.setLore(lore);
-                item.setItemMeta(meta);
-                placeholderInventory.setItem(slot, item);
-            }
-        }
-    }
-
-    public Inventory getPlaceholderInventory(){
-        return placeholderInventory;
-    }
-
-    public void openPlaceholdersMenu(Player player){
-        refreshPlaceholders();
-        player.openInventory(placeholderInventory);
-    }
 
     public void createInventory(){
         youiInventory.createInventory();
@@ -152,12 +92,12 @@ public class Session {
         DefaultInventory defaults = getTemplate().getDefault();
         if(defaults!=null){
             youiInventory.getInventory().setContents(defaults.getContents());
-            youiInventory.setPlaceholders((HashMap<Integer, List<String>>)defaults.getInversePlaceholders().clone());
+            youiInventory.setPlaceholders(defaults.getInversePlaceholders());
         }
     }
 
     public void resume(Player player){
-        markPlaceholders();
+        decoratePlaceholders();
         player.openInventory(getInventory());
     }
 
@@ -168,7 +108,7 @@ public class Session {
             JsonElement element = parser.parse(reader);
             JsonObject jsonObject = element.getAsJsonObject();
             youiInventory.deserialize(jsonObject);
-            markPlaceholders();
+            decoratePlaceholders();
         } catch(Exception e){
             e.printStackTrace();
         }
@@ -181,14 +121,14 @@ public class Session {
             JsonElement element = parser.parse(json);
             JsonObject jsonObject = element.getAsJsonObject();
             youiInventory.deserialize(jsonObject);
-            markPlaceholders();
+            decoratePlaceholders();
         } catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public void markPlaceholders(){
-        for(Entry<Integer, List<String>> slots : youiInventory._getPlaceholders().entrySet()){
+    public void decoratePlaceholders(){
+        for(Entry<Integer, List<PlaceholderInstance>> slots : youiInventory._getPlaceholders().entrySet()){
             Helper.setPlaceholders(youiInventory.getInventory().getItem(slots.getKey()), slots.getValue());
         }
     }

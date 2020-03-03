@@ -34,25 +34,30 @@ public class YouiInventory implements CustomMenu {
     private Template template;
     private String name;
     private HashMap<String, Object> options = new HashMap<>();
-    // private HashMap<String, List<Integer>> placeholders = new HashMap<>();
-    private HashMap<Integer, List<String>> _placeholders = new HashMap<>();
+    private HashMap<Integer, List<PlaceholderInstance>> _placeholders = new HashMap<>();
     private HashMap<String, List<Integer>> inversePlaceholders = new HashMap<>();
     private Inventory inventory;
 
+    public static final String PLACEHOLDER_SEPARATOR = ChatColor.translateAlternateColorCodes('&', ",&o&e&r");
     public static final String PLACEHOLDER_LORE = ChatColor.translateAlternateColorCodes('&', "&o&o&e&e&rPlaceholders:");
 
     public void updateInversePlaceholders(){
         HashMap<String, List<Integer>> map = new HashMap<>();
-        for(Entry<Integer, List<String>> entry : _placeholders.entrySet()){
-            for(String placeholder : entry.getValue()){
-                List<Integer> slots = map.getOrDefault(placeholder, new ArrayList<>());
+        for(Entry<Integer, List<PlaceholderInstance>> entry : _placeholders.entrySet()){
+            for(PlaceholderInstance placeholder : entry.getValue()){
+                List<Integer> slots = map.get(placeholder.getPlaceholderName());
+                if(slots==null){
+                    slots = new ArrayList<>();
+                    map.put(placeholder.getPlaceholderName(), slots);
+                }
+
                 slots.add(entry.getKey());
             }
         }
         inversePlaceholders = map;
     }
 
-    public void setPlaceholders(HashMap<Integer, List<String>> placeholders){
+    public void setPlaceholders(HashMap<Integer, List<PlaceholderInstance>> placeholders){
         this._placeholders = placeholders;
         updateInversePlaceholders();
     }
@@ -91,7 +96,7 @@ public class YouiInventory implements CustomMenu {
     }
 
     @Override
-    public List<String> getPlaceholdersIn(int slot) {
+    public List<PlaceholderInstance> getPlaceholdersIn(int slot) {
         return this._placeholders.getOrDefault(slot, new ArrayList<>());
     }
 
@@ -99,7 +104,7 @@ public class YouiInventory implements CustomMenu {
     public boolean hasPlaceholder(int slot, String placeholder) {
         if(template.getPlaceholder(placeholder)==null) YouiPlugin.getInstance().getLogger().warning("Trying to find unexisting placeholder \""+placeholder+"\" in template \""+template.getFullName()+"\".");
 
-        return this._placeholders.containsKey(slot) && this._placeholders.get(slot).contains(placeholder);
+        return this.inversePlaceholders.containsKey(placeholder) && this.inversePlaceholders.get(placeholder).contains(slot);
     }
 
     public YouiInventory setTemplate(Template template){
@@ -112,26 +117,15 @@ public class YouiInventory implements CustomMenu {
     }
 
     public void fixPlaceholders(){
-        Iterator<Entry<Integer, List<String>>> iterator = this._placeholders.entrySet().iterator();
+        Iterator<Entry<Integer, List<PlaceholderInstance>>> iterator = this._placeholders.entrySet().iterator();
 
         while(iterator.hasNext()){
-            Entry<Integer, List<String>> slot = iterator.next();
+            Entry<Integer, List<PlaceholderInstance>> slot = iterator.next();
             if(slot.getKey()<0 || slot.getKey()>=inventory.getSize()){
                 iterator.remove();
             }
         }
     }
-
-    // public void setPlaceholder(String placeholder, int slot){
-    //     // List<Integer> slotList = placeholders.get(placeholder);
-    //     // if(slotList==null){
-    //     //     slotList = new ArrayList<>();
-    //     //     placeholders.put(placeholder, slotList);
-    //     // }
-
-    //     // slotList.add(slot);
-    //     this._placeholders
-    // }
 
     public List<Integer> getPlaceholder(String placeholder){
         return inversePlaceholders.get(placeholder);
@@ -142,7 +136,7 @@ public class YouiInventory implements CustomMenu {
         return inversePlaceholders;
     }
 
-    public HashMap<Integer, List<String>> _getPlaceholders(){
+    public HashMap<Integer, List<PlaceholderInstance>> _getPlaceholders(){
         return _placeholders;
     }
 
@@ -230,10 +224,6 @@ public class YouiInventory implements CustomMenu {
         setInventory(newInventory());
     }
 
-    public List<Placeholder> getPlaceholders(int slot){
-        return this._placeholders.containsKey(slot) ? this._placeholders.get(slot).stream().map((a) -> {return template.getPlaceholder(a);}).collect(Collectors.toList()) : new ArrayList<>();
-    }
-
     @Deprecated
     public void removePlaceholders(int slot){
         this._placeholders.remove(slot);
@@ -243,11 +233,10 @@ public class YouiInventory implements CustomMenu {
         this._placeholders.clear();
         for(int i = 0; i < inventory.getContents().length; i++){
             ItemStack item = inventory.getContents()[i];
-            List<String> placeholders;
+            List<PlaceholderInstance> placeholders;
             if((placeholders = Helper.getPlaceholders(item))!=null){
                 this._placeholders.put(i, placeholders);
             }
-            // Helper.stripPlaceholders(item);
         }
     }
 
@@ -270,19 +259,17 @@ public class YouiInventory implements CustomMenu {
         }
         element.add("options", options);
 
-        System.out.println(_placeholders);
         updatePlaceholderFromItems();
-        System.out.println(_placeholders);
         updateInversePlaceholders();
 
         JsonObject placeholders = new JsonObject();
-        for(Entry<Integer, List<String>> slot : this._placeholders.entrySet()){
-            for(String placeholder : slot.getValue()){
-                if(!placeholders.has(placeholder)){
-                    placeholders.add(placeholder, new JsonArray());
+        for(Entry<Integer, List<PlaceholderInstance>> slot : this._placeholders.entrySet()){
+            for(PlaceholderInstance placeholder : slot.getValue()){
+                if(!placeholders.has(placeholder.toPlain())){
+                    placeholders.add(placeholder.toPlain(), new JsonArray());
                 }
 
-                placeholders.get(placeholder).getAsJsonArray().add(new JsonPrimitive(slot.getKey()));
+                placeholders.get(placeholder.toPlain()).getAsJsonArray().add(new JsonPrimitive(slot.getKey()));
             }
         }
         element.add("placeholders", placeholders);
@@ -336,7 +323,7 @@ public class YouiInventory implements CustomMenu {
                         this._placeholders.put(slot, new ArrayList<>());
                     }
 
-                    this._placeholders.get(slot).add(placeholderInfo.getKey());
+                    this._placeholders.get(slot).add(PlaceholderInstance.fromPlain(placeholderInfo.getKey()));
                 }
             }
             updateInversePlaceholders();

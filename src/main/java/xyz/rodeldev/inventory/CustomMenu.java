@@ -53,7 +53,7 @@ public interface CustomMenu {
      * @param slot the inventory slot where to check for placeholders
      * @return an {@link java.util.ArrayList} containing all the placeholders
      */
-    public List<String> getPlaceholdersIn(int slot);
+    public List<PlaceholderInstance> getPlaceholdersIn(int slot);
  
     /**
      * Tells whenever a slot contains a placeholder <br>

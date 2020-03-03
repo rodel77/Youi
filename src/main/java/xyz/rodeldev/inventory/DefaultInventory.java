@@ -28,20 +28,15 @@ public class DefaultInventory implements CustomMenu {
         inventory = Helper.createInventory(template.getInventoryType(), template.getInventorySize(), template.getOptionString("title"));
     }
 
-    @Deprecated
-    public HashMap<String, List<Integer>> getPlaceholders(){
-        return placeholders;
-    }
-
-    public HashMap<Integer, List<String>> getInversePlaceholders(){
-        HashMap<Integer, List<String>> map = new HashMap<>();
+    public HashMap<Integer, List<PlaceholderInstance>> getInversePlaceholders(){
+        HashMap<Integer, List<PlaceholderInstance>> map = new HashMap<>();
         for(Entry<String, List<Integer>> entry : placeholders.entrySet()){
             for(int slot : entry.getValue()){
                 if(!map.containsKey(slot)){
                     map.put(slot, new ArrayList<>());
                 }
 
-                map.get(slot).add(entry.getKey());
+                map.get(slot).add(PlaceholderInstance.fromPlain(entry.getKey()));
             }
         }
         return map;
@@ -84,12 +79,12 @@ public class DefaultInventory implements CustomMenu {
     }
     
     @Override
-    public List<String> getPlaceholdersIn(int slot) {
-        List<String> placeholders = new ArrayList<>();
+    public List<PlaceholderInstance> getPlaceholdersIn(int slot) {
+        List<PlaceholderInstance> placeholders = new ArrayList<>();
         for(Entry<String, List<Integer>> placeholderList : this.placeholders.entrySet()) {
             for(int slt : placeholderList.getValue()){
                 if(slt==slot){
-                    placeholders.add(placeholderList.getKey());
+                    placeholders.add(PlaceholderInstance.fromPlain(placeholderList.getKey()));
                 }
             }
         }

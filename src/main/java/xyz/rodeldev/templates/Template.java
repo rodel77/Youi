@@ -197,6 +197,10 @@ public class Template {
 
     public Template registerPlaceholder(Placeholder placeholder){
         try {
+            if(placeholder.getName().contains("{") || placeholder.getName().contains("}") || placeholder.getName().contains("[") || placeholder.getName().contains("]")){
+                throw new Exception(String.format("Can't register placeholder %s, because it contains brackets or curly brackers '{}' or '[]'", placeholder.getName()));
+            }
+
             for(Entry<String, Placeholder> ph : placeholders.entrySet()){
                 if(ph.getKey().equalsIgnoreCase(placeholder.getName())){
                     throw new Exception("Can't register placeholder \""+placeholder.getName()+"\" in template \""+this.getFullName()+"\" because there is already one called like that (not case sensitive)");
