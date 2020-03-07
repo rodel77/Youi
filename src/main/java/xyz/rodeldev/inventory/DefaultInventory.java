@@ -43,7 +43,7 @@ public class DefaultInventory implements CustomMenu {
     }
 
     public void addDefaultPlaceholder(String name, int slot) throws UnsupportedOperationException{
-        if(template.getPlaceholder(name)==null) throw new UnsupportedOperationException("Placeholder \""+name+"\" doesn't exists!");
+        // if(template.getPlaceholder(name)==null) throw new UnsupportedOperationException("Placeholder \""+name+"\" doesn't exists!");
 
         List<Integer> slotList = placeholders.get(name);
         if(slotList==null){

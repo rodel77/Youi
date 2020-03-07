@@ -1,6 +1,7 @@
 package xyz.rodeldev.templates;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.util.HashMap;
@@ -14,90 +15,87 @@ import com.google.gson.JsonParser;
 
 import org.bukkit.plugin.Plugin;
 
+import xyz.rodeldev.Helper;
 import xyz.rodeldev.YouiPlugin;
 import xyz.rodeldev.inventory.CustomMenu;
 import xyz.rodeldev.inventory.YouiInventory;
 
 public class TemplateRegistry {
     private static HashMap<String, Template> registry = new HashMap<>();
-    private static HashMap<Template, CustomMenu> overrideMap = new HashMap<>();
+    private static HashMap<String, String> overrideFile = new HashMap<>();
+    private static HashMap<String, CustomMenu> _overrideMap = new HashMap<>();
+
 
     public TemplateRegistry(){
-        // @TODO: remove this
-        // register(new Template(YouiPlugin.getInstance(), "test").registerPlaceholders("button1").registerPlaceholder(new Placeholder("constrainedph").setConstraint(1, 2)).defaultFillInventory(new ItemStack(Material.ACACIA_DOOR)).defaultAddPlaceholder("button1", 1).defaultSetItem(new ItemStack(Material.DIAMOND), 1));
-        loadOverrideMap();
+        _loadOverrideMap();
     }
 
     public static void deleteMenu(String menuName){
-        for(Entry<Template, CustomMenu> override : overrideMap.entrySet()){
-            if(override.getValue().getName().equals(menuName)){
-                overrideMap.remove(override.getKey());
+        for(Entry<String, String> entry : overrideFile.entrySet()){
+            if(entry.getValue().equals(menuName)){
+                overrideFile.remove(entry.getKey());
                 saveOverrideMap();
-                loadOverrideMap();
+                _overrideMap.remove(entry.getKey());
                 return;
             }
         }
     }
     
-    public static void setOverride(Template template, CustomMenu menu){
-        overrideMap.put(template, menu);
+    public static void setOverride(String templateFullName, String menuName){
+        overrideFile.put(templateFullName, menuName);
+        saveOverrideMap();
+        updateOverride(templateFullName);
     }
 
     public static void saveOverrideMap(){
-        try {
-            JsonObject element = new JsonObject();
-            for(Entry<Template, CustomMenu> override : overrideMap.entrySet()) {
-                element.addProperty(override.getKey().getFullName(), override.getValue().getName());
+        File file = YouiPlugin.getInstance().getFileSystem().getOverrideFile();
+        try(FileOutputStream outputStream = new FileOutputStream(file)){
+            JsonObject json = new JsonObject();
+            for(Entry<String, String> entry : overrideFile.entrySet()){
+                json.addProperty(entry.getKey(), entry.getValue());
             }
-
-            File file = YouiPlugin.getInstance().getFileSystem().getOverrideFile();
-            try(FileOutputStream outputStream = new FileOutputStream(file)){
-                outputStream.write(element.toString().getBytes());
-            }catch(Exception e){
-                e.printStackTrace();
-            }
-        } catch(Exception e){
-            e.printStackTrace();
-        }
-    }
-
-    public static void loadOverrideMap(){
-        try(FileReader reader = new FileReader(YouiPlugin.getInstance().getFileSystem().getOverrideFile())){
-            JsonParser parser = new JsonParser();
-            JsonElement element = parser.parse(reader);
-            JsonObject jsonObject = element.getAsJsonObject();
-            overrideMap.clear();
-            for(Entry<String, JsonElement> override : jsonObject.entrySet()){
-                Template template = get(override.getKey());
-                if(template==null){
-                    YouiPlugin.getInstance().getLogger().log(Level.WARNING, "Can't found template \""+override.getKey()+"\" while loading override map.");
-                    continue;
-                }
-
-                File menuFile = YouiPlugin.getInstance().getFileSystem().getMenu(override.getValue().getAsString());
-                if(!menuFile.exists()){
-                    YouiPlugin.getInstance().getLogger().log(Level.WARNING, "Can't found menu file called \""+override.getValue().getAsString()+"\" while loading overriding of template \""+template.getFullName()+"\"");
-                    continue;
-                }
-
-                try(FileReader reader2 = new FileReader(menuFile)){
-                    JsonElement menuElement = parser.parse(reader2);
-                    JsonObject menuObject = menuElement.getAsJsonObject();
-                    YouiInventory youiInventory = new YouiInventory();
-                    youiInventory.deserialize(menuObject);
-                    overrideMap.put(template, youiInventory);
-                } catch(Exception e){
-                    e.printStackTrace();
-                }
-            }
-
+            outputStream.write(json.toString().getBytes());
         }catch(Exception e){
             e.printStackTrace();
         }
     }
 
-    public static HashMap<Template, CustomMenu> getOverrideMap(){
-        return overrideMap;
+    public static CustomMenu getOverride(String templateFullName){
+        return _overrideMap.get(templateFullName);
+    }
+
+    private static String updateOverride(String templateFullName){
+        _overrideMap.put(templateFullName, null);
+
+        String menuName = overrideFile.get(templateFullName);
+        if(menuName!=null){
+            try(FileReader reader = new FileReader(YouiPlugin.getInstance().getFileSystem().getMenu(menuName))){
+                JsonObject jsonMenu = Helper.gson.fromJson(reader, JsonObject.class);
+                YouiInventory youiInventory = new YouiInventory();
+                youiInventory.setName(menuName);
+                youiInventory.deserialize(jsonMenu);
+                _overrideMap.put(templateFullName, youiInventory);
+                return null;
+            }catch(FileNotFoundException e){
+                return "This menu doesn't exists";
+            }catch(Exception e){
+                e.printStackTrace();
+                return "Internal Error: "+e.getMessage();
+            }
+        }
+
+        return "Invalid menu";
+    }
+
+    public static void _loadOverrideMap(){
+        try(FileReader reader = new FileReader(YouiPlugin.getInstance().getFileSystem().getOverrideFile())){
+            JsonObject overrideFile = Helper.gson.fromJson(reader, JsonObject.class);
+            for(Entry<String, JsonElement> template : overrideFile.entrySet()){
+                TemplateRegistry.overrideFile.put(template.getKey(), template.getValue().getAsString());
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
     }
 
     public static ImmutableList<Template> getRegistry(){
@@ -119,6 +117,7 @@ public class TemplateRegistry {
             }
 
             registry.put(template.getFullName(), template);
+            updateOverride(template.getFullName());
         }catch(Exception e){
             e.printStackTrace();
         }

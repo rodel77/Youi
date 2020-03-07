@@ -34,23 +34,6 @@ public class Helper {
 
     public static Gson gson = new Gson();
 
-    // public static Tuple<String, @Nullable JsonElement> getPlaceholderData(String input) throws JsonSyntaxException {
-    //     int index = input.lastIndexOf("{");
-    //     int arrayIndex = input.indexOf("[");
-    //     if(index==-1 || (arrayIndex!=-1 && arrayIndex<index)){
-    //         index = arrayIndex;
-    //     }
-    //     if(index<0){
-    //         return new Tuple<>(input, null);
-    //     }
-
-    //     return new Tuple<>(input.substring(0, index), gson.fromJson(input.substring(index), JsonElement.class));
-    // }
-
-    // public static String createPlaceholderData(Tuple<String, @Nullable JsonElement> data){
-    //     return data.b==null ? data.a : data.a+data.b.toString();
-    // }
-
 	public static void stripPlaceholders(ItemStack item){
 		ItemMeta meta;
 		if(item==null || item.getType()==Material.AIR || !item.hasItemMeta() || !(meta = item.getItemMeta()).hasLore()){

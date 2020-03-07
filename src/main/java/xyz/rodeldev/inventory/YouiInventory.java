@@ -87,7 +87,6 @@ public class YouiInventory implements CustomMenu {
 
     @Override
     public <T> Optional<T> getOptionValue(String optionName, Class<T> type){
-        if(!options.containsKey(optionName)) return Optional.empty();
         if(options.containsKey(optionName)){
             return Optional.of((T)options.get(optionName));
         }

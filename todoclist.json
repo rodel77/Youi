@@ -1,1 +1,1 @@
-{"tasks":[{"name":"Placeholder Selector","creation":1583113435,"completed":1583203678},{"name":"Override command","creation":1583113555},{"name":"Remove test command","creation":1583201502}]}
+{"tasks":[{"name":"Placeholder Selector","creation":1583113435,"completed":1583203678},{"name":"Override command","creation":1583113555,"completed":1583549051},{"name":"Remove test command","creation":1583201502},{"name":"Fix addDefaultPlaceholder@DefaultInventory, split name from data before duplication checking","creation":1583553217}]}

@@ -4,6 +4,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.bukkit.inventory.ItemStack;
+
+import xyz.rodeldev.Helper;
+import xyz.rodeldev.inventory.PlaceholderInstance;
+
 public class Placeholder {
     private String name, description = "";
     private int min = 0, max = 0;

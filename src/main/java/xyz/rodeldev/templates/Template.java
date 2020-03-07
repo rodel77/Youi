@@ -77,7 +77,7 @@ public class Template {
      * @return the player made menu or the default menu or null
      */
     public CustomMenu getOverride(boolean useDefault){
-        CustomMenu customMenu = TemplateRegistry.getOverrideMap().get(this);
+        CustomMenu customMenu = TemplateRegistry.getOverride(this.getFullName());
         if(customMenu!=null){
             return customMenu;
         }

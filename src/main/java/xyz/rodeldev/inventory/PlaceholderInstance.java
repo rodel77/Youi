@@ -25,6 +25,12 @@ public class PlaceholderInstance {
         return new PlaceholderInstance(input.substring(0, index), Helper.gson.fromJson(input.substring(index), JsonElement.class));
     }
 
+    /**
+     * Create a new placeholder instance, this represents a placeholder in an item.
+     * 
+     * @param placeholderName The name of the desired placeholder to add
+     * @param placeholderData Placeholder data attached, null if not needed
+     */
     public PlaceholderInstance(String placeholderName, @Nullable JsonElement placeholderData){
         this.placeholderName = placeholderName;
         this.placeholderData = placeholderData;
